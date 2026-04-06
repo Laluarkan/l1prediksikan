@@ -1,2 +1,0 @@
-SHA1: 0C:EE:4F:BC:72:9E:A1:E7:9A:C4:9A:83:A2:7C:A4:D9:CA:66:62:2E
-CI: 1074921761810-f0oj1ure73kv2a305pr875umoudq69jg.apps.googleusercontent.com

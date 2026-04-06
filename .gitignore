@@ -1,0 +1,7 @@
+.env
+db.sqlite3
+code.txt
+# Mengabaikan folder instalasi dari semua sub-folder
+node_modules/
+*/node_modules/
+.expo/

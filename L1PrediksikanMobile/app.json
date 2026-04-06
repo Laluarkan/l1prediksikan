@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0B0F19" 
+      "backgroundColor": "#0B0F19"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -30,6 +30,12 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3cf18af4-2f21-4830-8b4f-4043753c4ccd"
+      }
+    }
   }
 }

@@ -11,7 +11,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import { ThemeLangContext } from '../context/ThemeLangContext'; // IMPORT CONTEXT
 
 // PENTING: IP Address laptop Anda (IPv4)
-const API_BASE_URL = 'http://172.17.72.241:8000/api'; 
+const API_BASE_URL = 'https://l1prediksi-api.onrender.com/api'; 
 
 WebBrowser.maybeCompleteAuthSession();
 

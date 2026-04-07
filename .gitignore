@@ -1,5 +1,6 @@
 .env
 db.sqlite3
+*.sqlite3
 code.txt
 # Mengabaikan folder instalasi dari semua sub-folder
 node_modules/

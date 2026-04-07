@@ -15,7 +15,7 @@ export default function AdminPage() {
     formData.append('file', file)
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/admin/preview', {
+      const res = await fetch('https://l1prediksi-api.onrender.com/api/admin/preview', {
         method: 'POST',
         body: formData
       })
@@ -35,7 +35,7 @@ export default function AdminPage() {
   const handleSave = async () => {
     setUploading(true)
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/admin/save', {
+      const res = await fetch('https://l1prediksi-api.onrender.com/api/admin/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matches: previewData })

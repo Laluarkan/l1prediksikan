@@ -20,7 +20,7 @@ export default function FixturePage({ user }) {
 
   const fetchFixtures = () => {
     setLoading(true)
-    fetch('http://127.0.0.1:8000/api/fixtures')
+    fetch('https://l1prediksi-api.onrender.com/api/fixtures')
       .then(res => res.json())
       .then(data => {
         setFixtures(data)
@@ -45,7 +45,7 @@ export default function FixturePage({ user }) {
     formData.append('file', file)
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/admin/fixtures/upload', {
+      const res = await fetch('https://l1prediksi-api.onrender.com/api/admin/fixtures/upload', {
         method: 'POST',
         body: formData
       })

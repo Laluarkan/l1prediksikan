@@ -15,7 +15,7 @@ export default function BlogPage({ user }) {
 
   const fetchArticles = () => {
     setLoading(true)
-    fetch('http://127.0.0.1:8000/api/articles')
+    fetch('https://l1prediksi-api.onrender.com/api/articles')
       .then(res => res.json())
       .then(data => {
         setArticles(data)
@@ -36,7 +36,7 @@ export default function BlogPage({ user }) {
     setSubmitting(true)
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/admin/articles/add', {
+      const res = await fetch('https://l1prediksi-api.onrender.com/api/admin/articles/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

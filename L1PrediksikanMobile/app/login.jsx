@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { ThemeLangContext } from '../context/ThemeLangContext'; // IMPORT CONTEXT
+import { makeRedirectUri } from 'expo-auth-session';
 
 // PENTING: IP Address laptop Anda (IPv4)
 const API_BASE_URL = 'https://l1prediksi-api.onrender.com/api'; 
@@ -26,8 +27,11 @@ export default function LoginScreen() {
 
   // --- HOOK GOOGLE LOGIN DIPERBARUI ---
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID, // Mengambil Web Client ID dari .env
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID, // MENGAMBIL ANDROID CLIENT ID DARI .ENV
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID, 
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    redirectUri: makeRedirectUri({
+      native: 'com.laluarkan.l1prediksi:/oauth2redirect' 
+    }) 
   });
 
   useEffect(() => {

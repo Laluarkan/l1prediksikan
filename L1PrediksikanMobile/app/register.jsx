@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // PENTING: Ganti dengan IP Address laptop Anda (IPv4)
-const API_BASE_URL = 'http://172.17.72.241:8000/api'; 
+const API_BASE_URL = 'https://l1prediksi-api.onrender.com/api'; 
 
 export default function RegisterScreen() {
   const [username, setUsername] = useState('');

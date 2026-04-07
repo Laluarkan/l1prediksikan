@@ -1,0 +1,9 @@
+# Blokir dari folder root dan semua sub-foldernya
+node_modules/
+*/node_modules/
+venv/
+.venv/
+.expo/
+dist/
+.env
+*/.env

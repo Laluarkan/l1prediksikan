@@ -18,6 +18,22 @@ import logoImage from './assets/image.png';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'MASUKKAN_CLIENT_ID'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://l1prediksikan.my.id/api'
+const GA_TRACKING_ID = 'G-EWE1G8SFNR' // ID Google Analytics kamu
+
+function GoogleAnalyticsTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Memastikan gtag sudah diload di index.html
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', GA_TRACKING_ID, {
+        page_path: location.pathname + location.search,
+      });
+    }
+  }, [location]); // useEffect ini akan jalan tiap kali 'location' berubah
+
+  return null; // Komponen ini tidak me-render apa-apa di UI
+}
 
 function Navigation({ user, handleLogout }) {
   const location = useLocation()

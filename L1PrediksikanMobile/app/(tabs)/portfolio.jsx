@@ -10,7 +10,7 @@ import { useFocusEffect } from 'expo-router';
 import { ThemeLangContext } from '../../context/ThemeLangContext'; // IMPORT GUDANG UTAMA
 
 // PENTING: Ganti dengan IP Address laptop Anda (IPv4)
-const API_BASE_URL = 'https://l1prediksi-api.onrender.com/api'; 
+const API_BASE_URL = 'https://l1prediksikan.my.id/api'; 
 
 const leagueMap = {
   'E0': 'Premier League', 'I1': 'Serie A', 'D1': 'Bundesliga', 'SP1': 'La Liga', 'F1': 'Ligue 1',

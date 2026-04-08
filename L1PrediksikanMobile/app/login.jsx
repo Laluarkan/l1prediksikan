@@ -12,7 +12,7 @@ import { ThemeLangContext } from '../context/ThemeLangContext'; // IMPORT CONTEX
 import { makeRedirectUri } from 'expo-auth-session';
 
 // PENTING: IP Address laptop Anda (IPv4)
-const API_BASE_URL = 'https://l1prediksi-api.onrender.com/api'; 
+const API_BASE_URL = 'https://l1prediksikan.my.id/api'; 
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -29,9 +29,7 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID, 
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    redirectUri: makeRedirectUri({
-      native: 'com.laluarkan.l1prediksi:/oauth2redirect' 
-    }) 
+    // Baris redirectUri dihapus saja
   });
 
   useEffect(() => {

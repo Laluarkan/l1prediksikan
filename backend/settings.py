@@ -33,7 +33,7 @@ JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'django-insecure-m+$s_cqlk8qpsd_6cg
 SECRET_KEY = 'django-insecure-m+$s_cqlk8qpsd_6cg!)zdg!5#xy_ya*dyp2@20z(lzag1e6bl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 

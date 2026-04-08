@@ -15,7 +15,7 @@ export default function AdminPage() {
     formData.append('file', file)
 
     try {
-      const res = await fetch('http://l1prediksikan.my.id/api/admin/preview', {
+      const res = await fetch('https://l1prediksikan.my.id/api/admin/preview', {
         method: 'POST',
         body: formData
       })
@@ -35,7 +35,7 @@ export default function AdminPage() {
   const handleSave = async () => {
     setUploading(true)
     try {
-      const res = await fetch('http://l1prediksikan.my.id/api/admin/save', {
+      const res = await fetch('https://l1prediksikan.my.id/api/admin/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matches: previewData })

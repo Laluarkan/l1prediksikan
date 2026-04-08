@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { GoogleLogin } from '@react-oauth/google'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://l1prediksikan.my.id/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://l1prediksikan.my.id/api'
 
 export default function LoginPage({ setUser }) {
   const navigate = useNavigate()

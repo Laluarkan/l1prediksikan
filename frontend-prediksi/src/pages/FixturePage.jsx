@@ -20,7 +20,7 @@ export default function FixturePage({ user }) {
 
   const fetchFixtures = () => {
     setLoading(true)
-    fetch('http://l1prediksikan.my.id/api/fixtures')
+    fetch('https://l1prediksikan.my.id/api/fixtures')
       .then(res => res.json())
       .then(data => {
         setFixtures(data)
@@ -45,7 +45,7 @@ export default function FixturePage({ user }) {
     formData.append('file', file)
 
     try {
-      const res = await fetch('http://l1prediksikan.my.id/api/admin/fixtures/upload', {
+      const res = await fetch('https://l1prediksikan.my.id/api/admin/fixtures/upload', {
         method: 'POST',
         body: formData
       })

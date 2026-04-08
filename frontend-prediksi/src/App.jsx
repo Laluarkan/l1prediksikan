@@ -17,7 +17,7 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import logoImage from './assets/image.png';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'MASUKKAN_CLIENT_ID'
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://l1prediksikan.my.id/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://l1prediksikan.my.id/api'
 
 function Navigation({ user, handleLogout }) {
   const location = useLocation()

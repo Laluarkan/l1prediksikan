@@ -8,7 +8,7 @@ export default function ArticleDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`https://l1prediksi-api.onrender.com/api/articles/${id}`)
+    fetch(`http://l1prediksikan.my.id/api/articles/${id}`)
       .then(res => {
          if (!res.ok) throw new Error("Artikel tidak ditemukan")
          return res.json()

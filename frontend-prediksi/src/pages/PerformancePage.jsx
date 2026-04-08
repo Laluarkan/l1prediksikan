@@ -15,7 +15,7 @@ export default function PerformancePage() {
 
   // Tambahkan setLeagues ke dalam array dependensi agar linter tenang
   useEffect(() => {
-    fetch('https://l1prediksi-api.onrender.com/api/leagues')
+    fetch('http://l1prediksikan.my.id/api/leagues')
       .then(res => res.json())
       .then(data => setLeagues(data))
       .catch(() => console.error("Gagal memuat liga dari server."));
@@ -26,7 +26,7 @@ export default function PerformancePage() {
     if (selectedLeague) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(true); // Menambahkan titik koma di sini
-      fetch(`https://l1prediksi-api.onrender.com/api/performance/${selectedLeague}`)
+      fetch(`http://l1prediksikan.my.id/api/performance/${selectedLeague}`)
         .then(res => res.json())
         .then(data => {
           setStats(data);

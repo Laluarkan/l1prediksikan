@@ -31,37 +31,6 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def form_string(self):
-        matches = MatchRecord.objects.filter(
-            models.Q(home_team=self) | models.Q(away_team=self)
-        ).order_by('-date', '-time')[:5]
-        form = []
-        for m in matches:
-            if m.home_team == self:
-                if m.ftr == 'H': form.append('W')
-                elif m.ftr == 'A': form.append('L')
-                else: form.append('D')
-            else:
-                if m.ftr == 'A': form.append('W')
-                elif m.ftr == 'H': form.append('L')
-                else: form.append('D')
-        return "".join(reversed(form))
-
-    @property
-    def real_avg_gf(self):
-        matches = MatchRecord.objects.filter(models.Q(home_team=self) | models.Q(away_team=self)).order_by('-date', '-time')[:5]
-        if not matches: return 0.0
-        total_gf = sum([m.fthg if m.home_team == self else m.ftag for m in matches])
-        return round(total_gf / len(matches), 2)
-
-    @property
-    def real_avg_ga(self):
-        matches = MatchRecord.objects.filter(models.Q(home_team=self) | models.Q(away_team=self)).order_by('-date', '-time')[:5]
-        if not matches: return 0.0
-        total_ga = sum([m.ftag if m.home_team == self else m.fthg for m in matches])
-        return round(total_ga / len(matches), 2)
-
 class MatchRecord(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     date = models.DateField()
@@ -131,11 +100,11 @@ class UserBet(models.Model):
     match_date = models.DateField()
     home_team = models.CharField(max_length=100)
     away_team = models.CharField(max_length=100)
-    bet_category = models.CharField(max_length=50) # DNB, OU, BTTS
+    bet_category = models.CharField(max_length=50) 
     bet_choice = models.CharField(max_length=100)
     odds = models.FloatField()
     stake = models.IntegerField()
-    status = models.CharField(max_length=20, default='Pending') # Pending, Won, Lost, Refund
+    status = models.CharField(max_length=20, default='Pending') 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -84,35 +84,8 @@ class TeamOut(Schema):
 
     @staticmethod
     def resolve_form_string(obj):
-        try:
-            matches = MatchRecord.objects.filter(
-                Q(home_team=obj) | Q(away_team=obj)
-            ).order_by('-date', '-time')[:5]
-            form = []
-            for m in matches:
-                if m.home_team == obj:
-                    if m.ftr == 'H': form.append('W')
-                    elif m.ftr == 'A': form.append('L')
-                    else: form.append('D')
-                else:
-                    if m.ftr == 'A': form.append('W')
-                    elif m.ftr == 'H': form.append('L')
-                    else: form.append('D')
-            return "".join(reversed(form))
-        except Exception:
-            return ""
+        return getattr(obj, 'calculated_form', "")
 
-    @staticmethod
-    def resolve_avg_gf(obj):
-        return obj.real_avg_gf
-
-    @staticmethod
-    def resolve_avg_ga(obj):
-        return obj.real_avg_ga
-
-    @staticmethod
-    def resolve_goal_diff(obj):
-        return round(obj.real_avg_gf - obj.real_avg_ga, 2)
 
 class PredictIn(Schema):
     league_name: str
@@ -396,7 +369,24 @@ def get_leagues(request):
 
 @api.get("/teams/{league_name}", response=List[TeamOut])
 def get_teams(request, league_name: str):
-    return Team.objects.filter(league__name=league_name).order_by('name')
+    teams = list(Team.objects.filter(league__name=league_name).order_by('name'))
+    matches = list(MatchRecord.objects.filter(league__name=league_name).order_by('-date', '-time'))
+    
+    for team in teams:
+        team_matches = [m for m in matches if m.home_team_id == team.id or m.away_team_id == team.id][:5]
+        form = []
+        for m in team_matches:
+            if m.home_team_id == team.id:
+                if m.ftr == 'H': form.append('W')
+                elif m.ftr == 'A': form.append('L')
+                else: form.append('D')
+            else:
+                if m.ftr == 'A': form.append('W')
+                elif m.ftr == 'H': form.append('L')
+                else: form.append('D')
+        team.calculated_form = "".join(reversed(form))
+        
+    return teams
 
 @api.post("/predict", response=PredictionOut)
 def predict_match(request, payload: PredictIn):
@@ -411,13 +401,13 @@ def predict_match(request, payload: PredictIn):
     h2h_rate = home_wins / len(h2h_matches) if len(h2h_matches) > 0 else 0.5
     elo_diff = (home.elo_rating + 80) - away.elo_rating
 
-    h_gd = home.real_avg_gf - home.real_avg_ga
-    a_gd = away.real_avg_gf - away.real_avg_ga
+    h_gd = home.avg_gf - home.avg_ga
+    a_gd = away.avg_gf - away.avg_ga
 
     feature_dict = {
         'Home_Pts_Last_5': home.pts_last_5, 'Away_Pts_Last_5': away.pts_last_5,
-        'Home_Avg_GF': home.real_avg_gf, 'Home_Avg_GA': home.real_avg_ga,
-        'Away_Avg_GF': away.real_avg_gf, 'Away_Avg_GA': away.real_avg_ga,
+        'Home_Avg_GF': home.avg_gf, 'Home_Avg_GA': home.avg_ga,
+        'Away_Avg_GF': away.avg_gf, 'Away_Avg_GA': away.avg_ga,
         'Home_Avg_SOT': home.avg_sot, 'Away_Avg_SOT': away.avg_sot,
         'H2H_Home_Win_Rate': h2h_rate, 'Home_Elo': home.elo_rating,
         'Away_Elo': away.elo_rating, 'Home_Goal_Difference': h_gd,
@@ -481,7 +471,7 @@ def predict_match(request, payload: PredictIn):
 
 @api.get("/performance/{league_name}", response=List[PerformanceStats])
 def get_performance(request, league_name: str):
-    matches = MatchRecord.objects.filter(league__name=league_name).exclude(dnb_prediction="")
+    matches = MatchRecord.objects.select_related('home_team', 'away_team').filter(league__name=league_name).exclude(dnb_prediction="")
     seasons = {}
     for m in matches:
         year = m.date.year
@@ -521,9 +511,13 @@ def get_performance(request, league_name: str):
     return result
 
 @api.get("/fixtures", response=List[FixtureOut])
+@api.get("/fixtures", response=List[FixtureOut])
 def get_fixtures(request):
     now_wib = pd.Timestamp.now(tz='Asia/Jakarta').tz_localize(None)
-    fixtures = Fixture.objects.all().order_by('date', 'time')
+    
+    # PERUBAHAN ADA DI BARIS INI: Tambahkan select_related('league')
+    fixtures = Fixture.objects.select_related('league').all().order_by('date', 'time')
+    
     valid_fixtures = []
     for f in fixtures:
         match_dt = datetime.combine(f.date, f.time)
@@ -626,7 +620,7 @@ def preview_csv(request, file: UploadedFile = File(...)):
         for t in Team.objects.all():
             elo_dict[t.name] = t.elo_rating
             history_dict[t.name] = [
-                {'pts': t.pts_last_5 / 5.0, 'gf': t.real_avg_gf, 'ga': t.real_avg_ga, 'sot': t.avg_sot}
+                {'pts': t.pts_last_5 / 5.0, 'gf': t.avg_gf, 'ga': t.avg_ga, 'sot': t.avg_sot}
             ] * 5
             
         features = []

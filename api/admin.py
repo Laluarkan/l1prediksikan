@@ -17,6 +17,7 @@ class TeamAdmin(admin.ModelAdmin):
     list_filter = ('league',)
     search_fields = ('name',)
     ordering = ('league', 'name')
+    list_select_related = ('league',)  # <--- Mencegah N+1 di Admin Team
 
 @admin.register(MatchRecord)
 class MatchRecordAdmin(admin.ModelAdmin):
@@ -24,6 +25,7 @@ class MatchRecordAdmin(admin.ModelAdmin):
     list_filter = ('league', 'date', 'ftr')
     search_fields = ('home_team__name', 'away_team__name')
     date_hierarchy = 'date'
+    list_select_related = ('home_team', 'away_team', 'league') # <--- Mencegah N+1 di Admin MatchRecord
 
 @admin.register(Fixture)
 class FixtureAdmin(admin.ModelAdmin):
@@ -31,6 +33,7 @@ class FixtureAdmin(admin.ModelAdmin):
     list_filter = ('league', 'date')
     search_fields = ('home_team', 'away_team')
     date_hierarchy = 'date'
+    list_select_related = ('league',) # <--- Mencegah N+1 di Admin Fixture
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):

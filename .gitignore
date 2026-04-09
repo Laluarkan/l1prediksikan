@@ -6,3 +6,21 @@ code.txt
 node_modules/
 */node_modules/
 .expo/
+
+# Virtual Environment
+venv/
+backend/venv/
+env/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Logs (Sangat penting agar log cronjob tidak masuk github)
+*.log
+
+# Database Lokal (Opsional, agar data VPS tidak tertimpa data lokal)
+db.sqlite3
+
+# Dataset / CSV (Karena akan diunduh otomatis oleh server)
+*.csv

@@ -548,7 +548,8 @@ def create_article(request, payload: ArticleIn):
 
 @api.post("/admin/fixtures/upload")
 def upload_fixtures(request, file: UploadedFile = File(...)):
-    content = file.read().decode('utf-8')
+    raw_data = file.read()
+    content = raw_data.decode('windows-1252', errors='replace')
     df = pd.read_csv(io.StringIO(content))
     valid_leagues = list(LEAGUE_FOLDER_MAP.keys())
     if 'Div' in df.columns:
@@ -599,7 +600,8 @@ def upload_fixtures(request, file: UploadedFile = File(...)):
 
 @api.post("/admin/preview", response=List[MatchData])
 def preview_csv(request, file: UploadedFile = File(...)):
-    content = file.read().decode('utf-8')
+    raw_data = file.read()
+    content = raw_data.decode('windows-1252', errors='replace')
     df = pd.read_csv(io.StringIO(content))
     
     df = df.dropna(subset=['HomeTeam', 'AwayTeam'])

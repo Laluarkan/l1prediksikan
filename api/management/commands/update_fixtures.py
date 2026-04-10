@@ -51,10 +51,16 @@ class Command(BaseCommand):
         fixtures_to_create = []
         now_wib = pd.Timestamp.now(tz='Asia/Jakarta').tz_localize(None)
 
-        def safe_float(val):
-            try: return float(val) if pd.notna(val) else 0.0
-            except: return 0.0
-
+        def get_valid_odds(row, column_candidates):
+            for col in column_candidates:
+                # Cek apakah kolomnya ada DAN isinya bukan NaN/kosong
+                if col in row and pd.notna(row[col]):
+                    try:
+                        return float(row[col])
+                    except (ValueError, TypeError):
+                        continue # Jika gagal konversi angka, lanjut cari di kolom berikutnya
+            return 0.0 # Default jika semua kandidat kosong
+        
         for _, row in df.iterrows():
             # Hanya simpan jadwal yang waktunya masih di masa depan
             if row['Datetime'].tz_localize(None) > now_wib:
@@ -65,11 +71,13 @@ class Command(BaseCommand):
                     time=row['Datetime'].time(),
                     home_team=row['HomeTeam'], 
                     away_team=row['AwayTeam'],
-                    odds_h=safe_float(row.get('PSH', row.get('B365H', row.get('AvgH')))),
-                    odds_d=safe_float(row.get('PSD', row.get('B365D', row.get('AvgD')))),
-                    odds_a=safe_float(row.get('PSA', row.get('B365A', row.get('AvgA')))),
-                    odds_over=safe_float(row.get('P>2.5', row.get('B365>2.5', row.get('Avg>2.5')))),
-                    odds_under=safe_float(row.get('P<2.5', row.get('B365<2.5', row.get('Avg<2.5'))))
+                    
+                    # --- GUNAKAN FUNGSI BARU DI SINI ---
+                    odds_h = get_valid_odds(row, ['PSH', 'B365H', 'AvgH']),
+                    odds_d = get_valid_odds(row, ['PSD', 'B365D', 'AvgD']),
+                    odds_a = get_valid_odds(row, ['PSA', 'B365A', 'AvgA']),
+                    odds_over = get_valid_odds(row, ['P>2.5', 'B365>2.5', 'Avg>2.5']),
+                    odds_under = get_valid_odds(row, ['P<2.5', 'B365<2.5', 'Avg<2.5'])
                 ))
         
         if fixtures_to_create:

@@ -1,4 +1,3 @@
-from .models import League, Team, MatchRecord, Fixture, Article
 import os
 import io
 import joblib
@@ -13,14 +12,15 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, check_password
-from ninja import NinjaAPI, Schema, File
+from ninja import NinjaAPI, File
 from ninja.files import UploadedFile
-from ninja.errors import HttpError
-from typing import List
 from dotenv import load_dotenv
-
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+
+from .models import League, Team, MatchRecord, Fixture, Article, UserProfile, UserBet, LeaguePerformance
+from .schemas import *
+from .services import update_league_performance, process_bet_settlements
 
 load_dotenv()
 JWT_SECRET = os.getenv('JWT_SECRET_KEY', settings.SECRET_KEY)
@@ -36,7 +36,6 @@ LEAGUE_FOLDER_MAP = {
     'SP1': 'spanyol', 'T1': 'turki', 'G1': 'yunani'
 }
 
-# --- Fungsi Bantu Autentikasi Internal ---
 def get_user_from_request(request):
     auth_header = request.headers.get('Authorization', '')
     if auth_header.startswith('Bearer '):
@@ -48,179 +47,6 @@ def get_user_from_request(request):
             return None
     return None
 
-# ==========================================
-# 1. SCHEMAS
-# ==========================================
-class AuthRegisterIn(Schema):
-    username: str
-    email: str
-    password: str
-
-class AuthLoginIn(Schema):
-    username: str
-    password: str
-
-class AuthGoogleIn(Schema):
-    credential: str
-
-class AuthOut(Schema):
-    token: str
-    username: str
-    email: str
-    is_admin: bool
-
-class LeagueOut(Schema):
-    name: str
-
-class TeamOut(Schema):
-    name: str
-    elo_rating: float
-    pts_last_5: int
-    form_string: str = ""  
-    avg_gf: float
-    avg_ga: float
-    avg_sot: float
-    goal_diff: float
-
-    @staticmethod
-    def resolve_form_string(obj):
-        return getattr(obj, 'calculated_form', "")
-
-
-class PredictIn(Schema):
-    league_name: str
-    home_team: str
-    away_team: str
-    odds_h: float
-    odds_d: float
-    odds_a: float
-    odds_over: float
-    odds_under: float
-
-class PredictionOut(Schema):
-    dnb_prediction: str
-    dnb_home_prob: float
-    dnb_away_prob: float
-    ou_prediction: str
-    ou_over_prob: float
-    ou_under_prob: float
-    btts_prediction: str
-    btts_yes_prob: float
-    btts_no_prob: float
-
-class MatchData(Schema):
-    league: str
-    date: str
-    time: str
-    home_team: str
-    away_team: str
-    fthg: int
-    ftag: int
-    ftr: str
-    home_elo: float
-    away_elo: float
-    home_pts_last_5: int
-    away_pts_last_5: int
-    home_avg_gf: float
-    home_avg_ga: float
-    away_avg_gf: float
-    away_avg_ga: float
-    home_avg_sot: float
-    away_avg_sot: float
-    h2h_home_win_rate: float
-    home_goal_diff: float
-    away_goal_diff: float
-    elo_diff: float
-    dnb_prediction: str = ""
-    dnb_home_prob: float = 0.0
-    dnb_away_prob: float = 0.0
-    ou_prediction: str = ""
-    ou_over_prob: float = 0.0
-    ou_under_prob: float = 0.0
-    btts_prediction: str = ""
-    btts_yes_prob: float = 0.0
-    btts_no_prob: float = 0.0
-
-class MatchSavePayload(Schema):
-    matches: List[MatchData]
-
-class PerformanceStats(Schema):
-    season: str
-    total_matches: int
-    hda_accuracy: float
-    ou_accuracy: float
-    btts_accuracy: float
-
-class FixtureOut(Schema):
-    id: int
-    league_name: str
-    date: str
-    time: str
-    home_team: str
-    away_team: str
-    odds_h: float
-    odds_d: float
-    odds_a: float
-    odds_over: float
-    odds_under: float
-
-class ArticleOut(Schema):
-    id: int
-    title: str
-    category: str
-    excerpt: str
-    content: str  
-    read_time: str
-    color: str
-    created_at: str
-
-    @staticmethod
-    def resolve_created_at(obj):
-        return obj.created_at.strftime("%d %b %Y")
-
-class ArticleIn(Schema):
-    title: str
-    category: str
-    excerpt: str
-    content: str  
-    read_time: str
-    color: str = "bg-blue-500/20 text-blue-400 border-blue-500/30"
-
-# --- SCHEMAS BET & LEADERBOARD ---
-class BetIn(Schema):
-    league: str
-    match_date: str
-    home_team: str
-    away_team: str
-    bet_category: str
-    bet_choice: str
-    odds: float
-    stake: int
-
-class BetOut(Schema):
-    id: int
-    league: str
-    match_date: str
-    home_team: str
-    away_team: str
-    bet_category: str
-    bet_choice: str
-    odds: float
-    stake: int
-    status: str
-    created_at: str
-
-    @staticmethod
-    def resolve_created_at(obj):
-        return obj.created_at.strftime("%d %b %Y, %H:%M")
-
-class LeaderboardOut(Schema):
-    username: str
-    points: int
-
-# ==========================================
-# 1.5. ENDPOINTS AUTH 
-# ==========================================
 @api.post("/auth/register", response=AuthOut)
 def register_user(request, payload: AuthRegisterIn):
     if User.objects.filter(username=payload.username).exists():
@@ -233,7 +59,6 @@ def register_user(request, payload: AuthRegisterIn):
         email=payload.email,
         password=make_password(payload.password)
     )
-    from .models import UserProfile
     UserProfile.objects.create(user=user, points=1000)
     token = jwt.encode({"user_id": user.id, "username": user.username}, JWT_SECRET, algorithm="HS256")
     is_admin = user.is_staff or user.is_superuser
@@ -253,7 +78,7 @@ def login_user(request, payload: AuthLoginIn):
 def google_login(request, payload: AuthGoogleIn):
     try:
         if not settings.GOOGLE_CLIENT_ID:
-            return api.create_response(request, {"detail": "GOOGLE_CLIENT_ID belum diatur di Backend."}, status=500)
+            return api.create_response(request, {"detail": "GOOGLE_CLIENT_ID belum diatur."}, status=500)
 
         idinfo = id_token.verify_oauth2_token(
             payload.credential, 
@@ -272,38 +97,25 @@ def google_login(request, payload: AuthGoogleIn):
                 new_username = f"{base_username}{counter}"
                 counter += 1
                 
-            user = User(
-                username=new_username,
-                email=email
-            )
+            user = User(username=new_username, email=email)
             user.set_unusable_password()
             user.save()
-            
-            from .models import UserProfile
             UserProfile.objects.create(user=user, points=1000)
         
         token = jwt.encode({"user_id": user.id, "username": user.username}, JWT_SECRET, algorithm="HS256")
         is_admin = user.is_staff or user.is_superuser
         return AuthOut(token=token, username=user.username, email=user.email, is_admin=is_admin)
-    except ValueError as ve:
-        return api.create_response(request, {"detail": f"Token Google ditolak: {str(ve)}"}, status=400)
     except Exception as e:
         return api.create_response(request, {"detail": f"Gagal autentikasi Google: {str(e)}"}, status=400)
 
-# ==========================================
-# 2. ENDPOINTS BET TRACKER & LEADERBOARD
-# ==========================================
 @api.get("/user/balance")
 def get_user_balance(request):
     user = get_user_from_request(request)
     if not user: 
         return api.create_response(request, {"detail": "Unauthorized"}, status=401)
     
-    # Gunakan get_or_create agar user lama yang belum punya profil otomatis dibuatkan
-    from .models import UserProfile, UserBet
     profile, created = UserProfile.objects.get_or_create(user=user, defaults={'points': 1000})
     
-    # Hitung Win Rate secara real-time
     completed_bets = UserBet.objects.filter(user=user, status__in=['Won', 'Lost'])
     total = completed_bets.count()
     if total > 0:
@@ -311,8 +123,6 @@ def get_user_balance(request):
         profile.win_rate = round((won / total) * 100, 1)
         profile.save()
 
-    # Hitung Rank (Peringkat ke berapa berdasarkan points)
-    # Ini menghitung ada berapa banyak orang yang poinnya lebih tinggi dari user ini
     higher_points_count = UserProfile.objects.filter(points__gt=profile.points).count()
     profile.rank = higher_points_count + 1
     profile.save()
@@ -326,43 +136,32 @@ def get_user_balance(request):
 @api.post("/bets/place")
 def place_bet(request, payload: BetIn):
     user = get_user_from_request(request)
-    if not user: return api.create_response(request, {"detail": "Silakan login untuk memasang taruhan."}, status=401)
+    if not user: return api.create_response(request, {"detail": "Silakan login."}, status=401)
+    if payload.stake <= 0: return api.create_response(request, {"detail": "Nominal tidak valid."}, status=400)
+    if user.profile.points < payload.stake: return api.create_response(request, {"detail": "Koin tidak mencukupi."}, status=400)
     
-    if payload.stake <= 0:
-        return api.create_response(request, {"detail": "Nominal koin tidak valid."}, status=400)
-        
-    if user.profile.points < payload.stake:
-        return api.create_response(request, {"detail": "Koin tidak mencukupi."}, status=400)
-    
-    # Potong koin
     user.profile.points -= payload.stake
     user.profile.save()
     
-    from .models import UserBet
     UserBet.objects.create(
         user=user, league=payload.league, match_date=datetime.strptime(payload.match_date, "%Y-%m-%d").date(),
         home_team=payload.home_team, away_team=payload.away_team,
         bet_category=payload.bet_category, bet_choice=payload.bet_choice,
         odds=payload.odds, stake=payload.stake
     )
-    return {"success": True, "message": "Taruhan berhasil disimpan!", "new_balance": user.profile.points}
+    return {"success": True, "message": "Taruhan berhasil!", "new_balance": user.profile.points}
 
 @api.get("/bets/history", response=List[BetOut])
 def get_bet_history(request):
     user = get_user_from_request(request)
     if not user: return api.create_response(request, {"detail": "Unauthorized"}, status=401)
-    from .models import UserBet
     return UserBet.objects.filter(user=user).order_by('-created_at')
 
 @api.get("/leaderboard", response=List[LeaderboardOut])
 def get_leaderboard(request):
-    from .models import UserProfile
     profiles = UserProfile.objects.all().order_by('-points')[:100]
     return [{"username": p.user.username, "points": p.points} for p in profiles]
 
-# ==========================================
-# 3. ENDPOINTS USER UTAMA (PREDIKSI & INFO)
-# ==========================================
 @api.get("/leagues", response=List[LeagueOut])
 def get_leagues(request):
     return League.objects.all().order_by('name')
@@ -385,7 +184,6 @@ def get_teams(request, league_name: str):
                 elif m.ftr == 'H': form.append('L')
                 else: form.append('D')
         team.calculated_form = "".join(reversed(form))
-        
     return teams
 
 @api.post("/predict", response=PredictionOut)
@@ -400,7 +198,6 @@ def predict_match(request, payload: PredictIn):
     home_wins = sum(1 for m in h2h_matches if (m.home_team == home and m.ftr == 'H') or (m.away_team == home and m.ftr == 'A'))
     h2h_rate = home_wins / len(h2h_matches) if len(h2h_matches) > 0 else 0.5
     elo_diff = (home.elo_rating + 80) - away.elo_rating
-
     h_gd = home.avg_gf - home.avg_ga
     a_gd = away.avg_gf - away.avg_ga
 
@@ -471,53 +268,22 @@ def predict_match(request, payload: PredictIn):
 
 @api.get("/performance/{league_name}", response=List[PerformanceStats])
 def get_performance(request, league_name: str):
-    matches = MatchRecord.objects.select_related('home_team', 'away_team').filter(league__name=league_name).exclude(dnb_prediction="")
-    seasons = {}
-    for m in matches:
-        year = m.date.year
-        season_str = f"{year}/{year+1}" if m.date.month > 6 else f"{year-1}/{year}"
-        if season_str not in seasons:
-            seasons[season_str] = {'total': 0, 'hda_correct': 0, 'ou_correct': 0, 'btts_correct': 0}
-        stat = seasons[season_str]
-        stat['total'] += 1
-        
-        is_home_win = m.ftr == 'H'
-        is_away_win = m.ftr == 'A'
-        if "Win" in m.dnb_prediction:
-            predicted_team = m.dnb_prediction.replace(" Win", "")
-            if (predicted_team == m.home_team.name and is_home_win) or \
-               (predicted_team == m.away_team.name and is_away_win):
-                stat['hda_correct'] += 1
-        
-        total_goals = m.fthg + m.ftag
-        is_over = total_goals > 2.5
-        if (m.ou_prediction == "Over 2.5" and is_over) or \
-           (m.ou_prediction == "Under 2.5" and not is_over):
-            stat['ou_correct'] += 1
-            
-        is_btts = m.fthg > 0 and m.ftag > 0
-        if (m.btts_prediction == "Yes" and is_btts) or \
-           (m.btts_prediction == "No" and not is_btts):
-            stat['btts_correct'] += 1
-
+    stats = LeaguePerformance.objects.filter(league_name=league_name).order_by('-season')
     result = []
-    for season, data in sorted(seasons.items(), reverse=True):
+    for s in stats:
         result.append({
-            "season": season, "total_matches": data['total'],
-            "hda_accuracy": round((data['hda_correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0,
-            "ou_accuracy": round((data['ou_correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0,
-            "btts_accuracy": round((data['btts_correct'] / data['total']) * 100, 1) if data['total'] > 0 else 0,
+            "season": s.season, 
+            "total_matches": s.total_matches,
+            "hda_accuracy": s.hda_accuracy,
+            "ou_accuracy": s.ou_accuracy,
+            "btts_accuracy": s.btts_accuracy,
         })
     return result
 
 @api.get("/fixtures", response=List[FixtureOut])
-@api.get("/fixtures", response=List[FixtureOut])
 def get_fixtures(request):
     now_wib = pd.Timestamp.now(tz='Asia/Jakarta').tz_localize(None)
-    
-    # PERUBAHAN ADA DI BARIS INI: Tambahkan select_related('league')
     fixtures = Fixture.objects.select_related('league').all().order_by('date', 'time')
-    
     valid_fixtures = []
     for f in fixtures:
         match_dt = datetime.combine(f.date, f.time)
@@ -538,9 +304,6 @@ def get_articles(request):
 def get_single_article(request, article_id: int):
     return get_object_or_404(Article, id=article_id)
 
-# ==========================================
-# 4. ENDPOINTS ADMIN UPLOAD (PREVIEW & SAVE)
-# ==========================================
 @api.post("/admin/articles/add")
 def create_article(request, payload: ArticleIn):
     Article.objects.create(**payload.dict())
@@ -569,10 +332,8 @@ def upload_fixtures(request, file: UploadedFile = File(...)):
 
     def get_best_odd(row, primary, fallback, avg_col):
         val = row.get(primary)
-        if pd.isna(val) or val == '' or val == '-':
-            val = row.get(fallback)
-        if pd.isna(val) or val == '' or val == '-':
-            val = row.get(avg_col)
+        if pd.isna(val) or val == '' or val == '-': val = row.get(fallback)
+        if pd.isna(val) or val == '' or val == '-': val = row.get(avg_col)
         return safe_float(val)
 
     Fixture.objects.all().delete()
@@ -596,7 +357,7 @@ def upload_fixtures(request, file: UploadedFile = File(...)):
         ))
         
     Fixture.objects.bulk_create(fixtures_to_create)
-    return {"success": True, "message": f"{len(fixtures_to_create)} Jadwal laga beserta Odds berhasil disinkronisasi."}
+    return {"success": True, "message": f"{len(fixtures_to_create)} Jadwal disinkronisasi."}
 
 @api.post("/admin/preview", response=List[MatchData])
 def preview_csv(request, file: UploadedFile = File(...)):
@@ -609,8 +370,7 @@ def preview_csv(request, file: UploadedFile = File(...)):
         df.rename(columns={df.columns[0]: 'Div'}, inplace=True)
 
     df = df.dropna(subset=['HomeTeam', 'AwayTeam'])
-    if 'Time' not in df.columns:
-        df['Time'] = '12:00'
+    if 'Time' not in df.columns: df['Time'] = '12:00'
         
     df['Datetime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'], format='mixed', dayfirst=True)
     df = df.sort_values('Datetime')
@@ -625,9 +385,7 @@ def preview_csv(request, file: UploadedFile = File(...)):
         
         for t in Team.objects.all():
             elo_dict[t.name] = t.elo_rating
-            history_dict[t.name] = [
-                {'pts': t.pts_last_5 / 5.0, 'gf': t.avg_gf, 'ga': t.avg_ga, 'sot': t.avg_sot}
-            ] * 5
+            history_dict[t.name] = [{'pts': t.pts_last_5 / 5.0, 'gf': t.avg_gf, 'ga': t.avg_ga, 'sot': t.avg_sot}] * 5
             
         features = []
         for index, row in df.iterrows():
@@ -637,11 +395,8 @@ def preview_csv(request, file: UploadedFile = File(...)):
             if home not in elo_dict: elo_dict[home] = 1500.0; history_dict[home] = []
             if away not in elo_dict: elo_dict[away] = 1500.0; history_dict[away] = []
             
-            h_elo = elo_dict[home]
-            a_elo = elo_dict[away]
-            
-            h_hist = history_dict[home][-5:]
-            a_hist = history_dict[away][-5:]
+            h_elo, a_elo = elo_dict[home], elo_dict[away]
+            h_hist, a_hist = history_dict[home][-5:], history_dict[away][-5:]
             
             h_pts_5 = sum(x['pts'] for x in h_hist) if h_hist else 0
             a_pts_5 = sum(x['pts'] for x in a_hist) if a_hist else 0
@@ -687,12 +442,9 @@ def preview_csv(request, file: UploadedFile = File(...)):
             hst = float(row.get('HST', 0) if pd.notna(row.get('HST')) else 0)
             ast = float(row.get('AST', 0) if pd.notna(row.get('AST')) else 0)
             
-            if fthg > ftag:
-                ftr = 'H'; h_pts = 3; a_pts = 0; winner = home
-            elif fthg < ftag:
-                ftr = 'A'; h_pts = 0; a_pts = 3; winner = away
-            else:
-                ftr = 'D'; h_pts = 1; a_pts = 1; winner = 'Draw'
+            if fthg > ftag: ftr = 'H'; h_pts = 3; a_pts = 0; winner = home
+            elif fthg < ftag: ftr = 'A'; h_pts = 0; a_pts = 3; winner = away
+            else: ftr = 'D'; h_pts = 1; a_pts = 1; winner = 'Draw'
                 
             K = 20
             w_e_home = 1 / (10 ** ((a_elo - (h_elo + 80)) / 400) + 1)
@@ -707,8 +459,7 @@ def preview_csv(request, file: UploadedFile = File(...)):
             h2h_dict[pair].append(winner)
 
         features_df = pd.DataFrame(features, index=df.index)
-        for col in features_df.columns:
-            df[col] = features_df[col]
+        for col in features_df.columns: df[col] = features_df[col]
 
         df['PSH'] = df.get('PSH', df.get('B365H', 1.0))
         df['PSD'] = df.get('PSD', df.get('B365D', 1.0))
@@ -717,21 +468,17 @@ def preview_csv(request, file: UploadedFile = File(...)):
         df['P_under_2.5'] = df.get('P_under_2.5', df.get('B365<2.5', df.get('Avg<2.5', 1.0)))
 
     df = df.fillna(0)
-
     df = df.assign(
         dnb_prediction='', dnb_home_prob=0.0, dnb_away_prob=0.0,
         ou_prediction='', ou_over_prob=0.0, ou_under_prob=0.0,
         btts_prediction='', btts_yes_prob=0.0, btts_no_prob=0.0
     )
 
-    cols_to_drop = ['Div', 'Date', 'Time', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG', 'FTR', 'O_U_2.5', 'BTTS', 'Datetime']
-
     for league_code, group in df.groupby('Div'):
         folder_name = LEAGUE_FOLDER_MAP.get(league_code, league_code.lower())
         model_dir = os.path.join(settings.BASE_DIR, 'model', folder_name)
 
-        if not os.path.exists(model_dir):
-            continue
+        if not os.path.exists(model_dir): continue
 
         try:
             model_dnb = joblib.load(os.path.join(model_dir, 'model_rf_dnb.pkl'))
@@ -745,8 +492,7 @@ def preview_csv(request, file: UploadedFile = File(...)):
             all_expected_cols = set(list(scaler_hda.feature_names_in_) + list(scaler_ou.feature_names_in_) + list(scaler_btts.feature_names_in_))
 
             for col in all_expected_cols:
-                if col not in X_raw.columns:
-                    X_raw[col] = 0
+                if col not in X_raw.columns: X_raw[col] = 0
 
             X_numeric = X_raw[list(all_expected_cols)].apply(pd.to_numeric, errors='coerce').fillna(0)
 
@@ -782,7 +528,6 @@ def preview_csv(request, file: UploadedFile = File(...)):
             df.loc[group.index, 'btts_prediction'] = np.where(prob_btts[:, 1] > prob_btts[:, 0], 'Yes', 'No')
 
         except Exception as e:
-            print(f"Peringatan: Gagal memprediksi saat preview - {e}")
             continue
     
     new_matches = []
@@ -815,7 +560,10 @@ def preview_csv(request, file: UploadedFile = File(...)):
 
 @api.post("/admin/save")
 def save_matches(request, payload: MatchSavePayload):
+    affected_leagues = set()
+
     for data in payload.matches:
+        affected_leagues.add(data.league)
         league_obj, _ = League.objects.get_or_create(name=data.league)
         home_team, _ = Team.objects.update_or_create(
             league=league_obj, name=data.home_team,
@@ -849,37 +597,9 @@ def save_matches(request, payload: MatchSavePayload):
             btts_prediction=data.btts_prediction, btts_yes_prob=data.btts_yes_prob, btts_no_prob=data.btts_no_prob
         )
 
-    # ---> SISTEM SETTLEMENT OTOMATIS SAAT ADMIN SAVE HASIL PERTANDINGAN <---
-    from .models import UserBet
-    pending_bets = UserBet.objects.filter(status='Pending')
-    for bet in pending_bets:
-        match = MatchRecord.objects.filter(date=bet.match_date, home_team__name=bet.home_team, away_team__name=bet.away_team).first()
-        if match:
-            won = False
-            if bet.bet_category == 'DNB':
-                if match.ftr == 'D':
-                    bet.status = 'Refund'
-                    bet.user.profile.points += bet.stake
-                    bet.user.profile.save()
-                    bet.save()
-                    continue
-                elif bet.bet_choice == match.home_team.name and match.ftr == 'H': won = True
-                elif bet.bet_choice == match.away_team.name and match.ftr == 'A': won = True
-            elif bet.bet_category == 'OU':
-                total_goals = match.fthg + match.ftag
-                if bet.bet_choice == 'Over 2.5' and total_goals > 2.5: won = True
-                elif bet.bet_choice == 'Under 2.5' and total_goals < 2.5: won = True
-            elif bet.bet_category == 'BTTS':
-                btts = match.fthg > 0 and match.ftag > 0
-                if bet.bet_choice == 'Yes' and btts: won = True
-                elif bet.bet_choice == 'No' and not btts: won = True
+    process_bet_settlements()
 
-            if won:
-                bet.status = 'Won'
-                bet.user.profile.points += int(bet.stake * bet.odds)
-            else:
-                bet.status = 'Lost'
-            bet.user.profile.save()
-            bet.save()
+    for league_name in affected_leagues:
+        update_league_performance(league_name)
 
-    return {"success": True, "message": f"{len(payload.matches)} data tersimpan dan taruhan disesuaikan."}
+    return {"success": True, "message": "Data tersimpan, taruhan disesuaikan, dan performa diperbarui."}

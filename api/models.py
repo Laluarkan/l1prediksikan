@@ -109,3 +109,18 @@ class UserBet(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.home_team} vs {self.away_team} ({self.status})"
+
+class LeaguePerformance(models.Model):
+    league_name = models.CharField(max_length=100)
+    season = models.CharField(max_length=50)
+    total_matches = models.IntegerField(default=0)
+    hda_accuracy = models.FloatField(default=0.0)
+    ou_accuracy = models.FloatField(default=0.0)
+    btts_accuracy = models.FloatField(default=0.0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('league_name', 'season')
+
+    def __str__(self):
+        return f"{self.league_name} - {self.season}"

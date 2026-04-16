@@ -1,49 +1,52 @@
-import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom'
-import { HelmetProvider, Helmet } from 'react-helmet-async'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import HomePage from './pages/HomePage'
-import PredictPage from './pages/PredictPage'
-import AdminPage from './pages/AdminPage'
-import PerformancePage from './pages/PerformancePage'
-import FixturePage from './pages/FixturePage'
-import BlogPage from './pages/BlogPage'
-import ArticleDetailPage from './pages/ArticleDetailPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import TrackerPage from './pages/TrackerPage'
-import LeaderboardPage from './pages/LeaderboardPage'
-// Tambahkan baris ini di bagian atas file
-import logoImage from './assets/image.png';
+import { lazy, Suspense, useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { HelmetProvider, Helmet } from 'react-helmet-async';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'MASUKKAN_CLIENT_ID'
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://l1prediksikan.my.id/api'
-const GA_TRACKING_ID = 'G-EWE1G8SFNR' // ID Google Analytics kamu
+// Halaman Beranda tetap di-import normal agar langsung tampil
+import HomePage from './pages/HomePage';
+
+// Halaman lainnya di-import menggunakan lazy loading untuk menghemat bandwidth
+const PredictPage = lazy(() => import('./pages/PredictPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const PerformancePage = lazy(() => import('./pages/PerformancePage'));
+const FixturePage = lazy(() => import('./pages/FixturePage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const ArticleDetailPage = lazy(() => import('./pages/ArticleDetailPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const TrackerPage = lazy(() => import('./pages/TrackerPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
+
+import logoImage from './assets/image-l1.webp';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'MASUKKAN_CLIENT_ID';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://l1prediksikan.my.id/api';
+const GA_TRACKING_ID = 'G-EWE1G8SFNR'; 
 
 function GoogleAnalyticsTracker() {
   const location = useLocation();
 
   useEffect(() => {
-    // Memastikan gtag sudah diload di index.html
     if (typeof window.gtag === 'function') {
       window.gtag('config', GA_TRACKING_ID, {
         page_path: location.pathname + location.search,
       });
     }
-  }, [location]); // useEffect ini akan jalan tiap kali 'location' berubah
+  }, [location]); 
 
-  return null; // Komponen ini tidak me-render apa-apa di UI
+  return null; 
 }
 
 function Navigation({ user, handleLogout }) {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMobileMenuOpen(false)
-  }, [location.pathname])
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const navLinks = [
     { name: 'Beranda', path: '/' },
@@ -52,19 +55,19 @@ function Navigation({ user, handleLogout }) {
     { name: 'Performa', path: '/performance' },
     { name: 'Blog', path: '/blog' },
     { name: 'Peringkat', path: '/leaderboard' },
-  ]
+  ];
 
   if (user) {
-    navLinks.push({ name: 'Portofolio', path: '/tracker' })
+    navLinks.push({ name: 'Portofolio', path: '/tracker' });
   }
   if (user?.is_admin) {
-    navLinks.push({ name: 'Admin DB', path: '/admin' })
+    navLinks.push({ name: 'Admin DB', path: '/admin' });
   }
 
   const onLogoutClick = () => {
-    handleLogout()
-    navigate('/login')
-  }
+    handleLogout();
+    navigate('/login');
+  };
 
   return (
     <header className="bg-gray-950 border-b border-gray-800 sticky top-0 z-50">
@@ -118,10 +121,9 @@ function Navigation({ user, handleLogout }) {
                     Hi, <span className="text-indigo-400">{user.username}</span>
                     {user.is_admin && <span className="ml-2 bg-red-500/20 text-red-400 text-[9px] px-1.5 py-0.5 rounded border border-red-500/30">ADMIN</span>}
                   </span>
-                  {/* PENAMBAHAN: Menampilkan saldo koin */}
                   {user.balance !== undefined && (
                     <span className="text-[10px] font-black text-yellow-400 mt-0.5">
-                      🪙 {user.balance.toLocaleString()}
+                      Koin: {user.balance.toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -189,9 +191,8 @@ function Navigation({ user, handleLogout }) {
                 <>
                   <div className="text-center mb-4 text-sm font-bold text-gray-300 flex flex-col items-center">
                     <div>Hi, <span className="text-indigo-400">{user.username}</span></div>
-                    {/* PENAMBAHAN: Menampilkan saldo koin di mobile menu */}
                     {user.balance !== undefined && (
-                      <span className="text-xs font-black text-yellow-400 mt-1">🪙 {user.balance.toLocaleString()} Koin</span>
+                      <span className="text-xs font-black text-yellow-400 mt-1">Koin: {user.balance.toLocaleString()}</span>
                     )}
                     {user.is_admin && <span className="block mt-1 text-red-400 text-[10px]">MODE ADMIN AKTIF</span>}
                   </div>
@@ -212,57 +213,50 @@ function Navigation({ user, handleLogout }) {
         </div>
       )}
     </header>
-  )
+  );
 }
 
 function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(null);
 
-  // Mengambil status login dan (baru) mengambil koin user dari server
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const token = localStorage.getItem('token')
-      const username = localStorage.getItem('username')
-      const is_admin = localStorage.getItem('is_admin') === 'true'
+      const token = localStorage.getItem('token');
+      const username = localStorage.getItem('username');
+      const is_admin = localStorage.getItem('is_admin') === 'true';
       
       if (token && username) {
-        setUser({ username, is_admin }) // Set awal agar UI cepat merespon
+        setUser({ username, is_admin }); 
         
-        // Panggil API untuk mendapatkan saldo koin terbaru
         try {
           const res = await fetch(`${API_BASE_URL}/user/balance`, {
             headers: { 'Authorization': `Bearer ${token}` }
-          })
+          });
           if (res.ok) {
-            const data = await res.json()
-            // Perbarui user state dengan tambahan balance
-            setUser(prev => ({ ...prev, balance: data.points }))
+            const data = await res.json();
+            setUser(prev => ({ ...prev, balance: data.points }));
           } else {
-             // Jika token expired/invalid
-             // eslint-disable-next-line react-hooks/immutability
-             handleLogout()
+             handleLogout();
           }
-        // eslint-disable-next-line no-unused-vars
         } catch (e) {
-          console.error("Gagal sinkronisasi koin")
+          console.error("Gagal sinkronisasi koin");
         }
       }
-    }
+    };
     
-    checkLoginStatus()
-  }, []) // Akan jalan sekali saat web pertama dibuka
+    checkLoginStatus();
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('username')
-    localStorage.removeItem('is_admin')
-    setUser(null)
-  }
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('is_admin');
+    setUser(null);
+  };
 
-  // Fungsi tambahan agar komponen lain (seperti halaman portofolio/login) bisa memperbarui koin navbar
   const updateUserBalance = (newBalance) => {
-      setUser(prev => prev ? { ...prev, balance: newBalance } : prev)
-  }
+      setUser(prev => prev ? { ...prev, balance: newBalance } : prev);
+  };
 
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -273,36 +267,42 @@ function App() {
         <Router>
           <div className="min-h-screen bg-gray-900 font-sans text-gray-200 selection:bg-indigo-500/30">
             <Navigation user={user} handleLogout={handleLogout} />
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/predict" element={<PredictPage />} />
-              <Route path="/fixtures" element={<FixturePage user={user} />} />
-              <Route path="/blog" element={<BlogPage user={user} />} />
-              <Route path="/performance" element={<PerformancePage />} />
-              <Route path="/blog/:id" element={<ArticleDetailPage />} />
-              
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              
-              {/* Kita lempar updateUserBalance agar saat user pasang koin, koin di navbar otomatis berkurang */}
-              <Route 
-                path="/tracker" 
-                element={user ? <TrackerPage user={user} updateUserBalance={updateUserBalance} /> : <Navigate to="/login" replace />} 
-              />
-              
-              <Route 
-                path="/admin" 
-                element={user?.is_admin ? <AdminPage /> : <Navigate to="/" replace />} 
-              />
-              
-              {/* Kita lempar update fungsi untuk dipakai saat login selesai */}
-              <Route path="/login" element={<LoginPage setUser={setUser} />} />
-              <Route path="/register" element={<RegisterPage setUser={setUser} />} />
-            </Routes>
+            
+            {/* Suspense digunakan sebagai penampung sementara saat komponen lazy sedang diunduh */}
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-[80vh]">
+                <div className="text-indigo-400 text-lg font-semibold animate-pulse">Memuat halaman...</div>
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/predict" element={<PredictPage />} />
+                <Route path="/fixtures" element={<FixturePage user={user} />} />
+                <Route path="/blog" element={<BlogPage user={user} />} />
+                <Route path="/performance" element={<PerformancePage />} />
+                <Route path="/blog/:id" element={<ArticleDetailPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                
+                <Route 
+                  path="/tracker" 
+                  element={user ? <TrackerPage user={user} updateUserBalance={updateUserBalance} /> : <Navigate to="/login" replace />} 
+                />
+                
+                <Route 
+                  path="/admin" 
+                  element={user?.is_admin ? <AdminPage /> : <Navigate to="/" replace />} 
+                />
+                
+                <Route path="/login" element={<LoginPage setUser={setUser} />} />
+                <Route path="/register" element={<RegisterPage setUser={setUser} />} />
+              </Routes>
+            </Suspense>
+
           </div>
         </Router>
       </HelmetProvider>
     </GoogleOAuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

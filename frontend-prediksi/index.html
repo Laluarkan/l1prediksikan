@@ -2,33 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/image.png" />
+    <link rel="icon" type="image/png" href="/image-l1.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>L1PREDIKSI - Prediksi Bola AI Akurat</title>
-      <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWE1G8SFNR"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-EWE1G8SFNR');
-
-    gtag('config', 'AW-18074535413');
-    
-    gtag('event', 'conversion', {
-            'send_to': 'AW-18074535413/CqBACMjvjJkcEPWLzqpD'
-        });
-  </script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1632073531333877"
-     crossorigin="anonymous"></script>
   </head>
   <body>
     <div id="root">
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #1a1a2e; color: white; font-family: sans-serif;">
-            <h2>Memuat L1PREDIKSI... ⚽</h2>
+            <h2>Memuat L1PrediksiKan...</h2>
         </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <script>
+      let isGtmLoaded = false;
+      function loadGoogleScripts() {
+        if (isGtmLoaded) return;
+        isGtmLoaded = true;
+        
+        // 1. Memuat Google Tag Manager
+        const gtmScript = document.createElement('script');
+        gtmScript.src = "https://www.googletagmanager.com/gtag/js?id=G-EWE1G8SFNR";
+        gtmScript.async = true;
+        document.body.appendChild(gtmScript);
+        
+        gtmScript.onload = function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-EWE1G8SFNR');
+          gtag('config', 'AW-18074535413');
+          gtag('event', 'conversion', { 'send_to': 'AW-18074535413/CqBACMjvjJkcEPWLzqpD' });
+        };
+
+        // 2. Memuat Google Adsense
+        const adsScript = document.createElement('script');
+        adsScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1632073531333877";
+        adsScript.async = true;
+        adsScript.crossOrigin = "anonymous";
+        document.body.appendChild(adsScript);
+      }
+
+      // Picu skrip Google jika ada interaksi (scroll/klik/sentuh)
+      ['scroll', 'mousemove', 'touchstart', 'click'].forEach(function(event) {
+        window.addEventListener(event, loadGoogleScripts, { once: true, passive: true });
+      });
+
+      // Atau picu otomatis setelah 3.5 detik jika tidak ada interaksi sama sekali
+      setTimeout(loadGoogleScripts, 3500);
+    </script>
   </body>
 </html>

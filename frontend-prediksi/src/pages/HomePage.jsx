@@ -11,7 +11,6 @@ export default function HomePage() {
   const [articles, setArticles] = useState([])
   const [topLeaders, setTopLeaders] = useState([]) 
   
-  // STATE DIPISAH: loading utama dan loading khusus performa
   const [loading, setLoading] = useState(true)
   const [perfLoading, setPerfLoading] = useState(true)
   
@@ -26,7 +25,6 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    // 1. FUNGSI UNTUK DATA RINGAN (Langsung Tampil)
     const fetchMainData = async () => {
       try {
         const fixRes = await fetch(`${API_BASE_URL}/fixtures`)
@@ -52,11 +50,10 @@ export default function HomePage() {
       } catch (error) {
         console.error("Gagal memuat data utama:", error)
       } finally {
-        setLoading(false) // Mematikan loading layar penuh dengan cepat!
+        setLoading(false)
       }
     }
 
-    // 2. FUNGSI UNTUK DATA BERAT (Berjalan di background)
     const fetchPerformanceData = async () => {
         try {
             const topLeagues = ['E0', 'I1', 'D1', 'SP1', 'F1']
@@ -64,7 +61,7 @@ export default function HomePage() {
               fetch(`${API_BASE_URL}/performance/${l}`)
                 .then(res => res.ok ? res.json() : [])
                 .then(data => Array.isArray(data) ? data.map(d => ({...d, league: l})) : [])
-                .catch(() => []) // Mencegah crash jika satu liga gagal dimuat
+                .catch(() => [])
             )
             
             const perfResults = await Promise.all(perfPromises)
@@ -84,11 +81,10 @@ export default function HomePage() {
         } catch (error) {
             console.error("Gagal kalkulasi performa:", error)
         } finally {
-            setPerfLoading(false) // Mematikan loading di seksi performa saja
+            setPerfLoading(false) 
         }
     }
 
-    // Jalankan pemuatan bertahap
     fetchMainData().then(() => fetchPerformanceData())
   }, [])
 
@@ -96,7 +92,6 @@ export default function HomePage() {
     navigate('/predict', { state: { fixtureData: fixture } })
   }
 
-  // Komponen Helper untuk Accordion
   const FaqItem = ({ index, title, icon, colorClass, children }) => {
     const isOpen = openFaq === index;
     return (
@@ -118,9 +113,7 @@ export default function HomePage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
           </svg>
         </button>
-        <div 
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
-        >
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="p-4 md:p-5 pt-0 text-gray-300 text-xs md:text-sm leading-relaxed border-t border-gray-700/50 mt-1">
             {children}
           </div>
@@ -167,265 +160,294 @@ export default function HomePage() {
         </div>
       </header>
 
-      {loading ? (
-        <div className="py-20 md:py-32 text-center" aria-live="polite">
-          <div className="inline-block w-6 h-6 md:w-8 md:h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3 md:mb-4"></div>
-          <div className="text-gray-500 font-semibold tracking-widest uppercase text-xs md:text-sm">Mempersiapkan Dashboard...</div>
-        </div>
-      ) : (
-        <div className="max-w-6xl mx-auto px-4 py-10 md:py-16 space-y-16 md:space-y-24">
-
-          {/* ================= JADWAL LAGA TERDEKAT ================= */}
-          <section aria-labelledby="fixtures-heading">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
-              <div>
-                <h2 id="fixtures-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Laga Top Eropa Terdekat</h2>
-                <p className="text-gray-400 text-xs md:text-sm mt-1">Klik pada pertandingan untuk memprediksi secara otomatis.</p>
-              </div>
-              <Link to="/fixtures" title="Semua Jadwal Laga" className="hidden sm:flex text-blue-400 hover:text-blue-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
-                Lihat Semua Jadwal <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
+      <div className="max-w-6xl mx-auto px-4 py-10 md:py-16 space-y-16 md:space-y-24">
+        
+        <section aria-labelledby="fixtures-heading">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
+            <div>
+              <h2 id="fixtures-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Laga Top Eropa Terdekat</h2>
+              <p className="text-gray-400 text-xs md:text-sm mt-1">Klik pada pertandingan untuk memprediksi secara otomatis.</p>
             </div>
+            <Link to="/fixtures" title="Semua Jadwal Laga" className="hidden sm:flex text-blue-400 hover:text-blue-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
+              Lihat Semua Jadwal <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
 
-            {fixtures.length > 0 ? (
-              <div className="bg-gray-800 rounded-xl md:rounded-2xl border border-gray-700 overflow-x-auto shadow-xl md:shadow-2xl">
-                <table className="w-full text-xs md:text-sm text-gray-300 min-w-[500px]">
-                  <tbody className="divide-y divide-gray-700/50">
-                    {fixtures.map((f) => (
-                      <tr 
-                        key={f.id} 
-                        onClick={() => handleRowClick(f)}
-                        title="Klik untuk memprediksi pertandingan ini"
-                        className="hover:bg-gray-700 transition-colors duration-200 group cursor-pointer"
-                      >
-                        <td className="px-3 md:px-6 py-3 md:py-5 w-24 md:w-32 border-r border-gray-700/30">
-                          <div className="text-[10px] md:text-xs text-blue-400 font-semibold mb-0.5 md:mb-1">{f.date}</div>
-                          <div className="text-base md:text-lg text-white font-black">{f.time} <span className="text-[10px] md:text-xs text-gray-500 font-normal">WIB</span></div>
-                        </td>
-                        <td className="px-3 md:px-6 py-3 md:py-5 text-right w-1/3">
-                          <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors">{f.home_team}</span>
-                        </td>
-                        <td className="px-2 md:px-4 py-3 md:py-5 text-center">
-                          <div className="flex flex-col items-center justify-center gap-1 md:gap-1.5">
-                            <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded font-black tracking-widest">VS</span>
-                            <span className="text-[8px] md:text-[10px] text-gray-400 font-bold tracking-widest text-center whitespace-nowrap">{leagueMap[f.league_name] || f.league_name}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 md:px-6 py-3 md:py-5 text-left w-1/3 border-l border-gray-700/30">
-                          <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors">{f.away_team}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
-                <p className="text-gray-400 text-xs md:text-sm italic">Belum ada jadwal pertandingan dalam waktu dekat untuk 5 Liga Top Eropa.</p>
-              </div>
-            )}
-          </section>
-
-          {/* ================= TOP PERFORMA MODEL ================= */}
-          <section aria-labelledby="performance-heading">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
-              <div>
-                <h2 id="performance-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Rekor Performa AI</h2>
-                <p className="text-gray-400 text-xs md:text-sm mt-1">Tingkat akurasi tertinggi model pada musim kompetisi terbaru.</p>
-              </div>
-              <Link to="/performance" title="Laporan Lengkap Performa AI" className="hidden sm:flex text-orange-400 hover:text-orange-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
-                Laporan Lengkap <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
+          {loading ? (
+            <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden min-h-[300px]">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex border-b border-gray-700/50 p-4 animate-pulse">
+                  <div className="w-24 bg-gray-700/50 h-10 rounded mr-4"></div>
+                  <div className="w-1/3 bg-gray-700/50 h-8 rounded mr-4"></div>
+                  <div className="w-10 bg-gray-700/50 h-8 rounded mr-4"></div>
+                  <div className="w-1/3 bg-gray-700/50 h-8 rounded"></div>
+                </div>
+              ))}
             </div>
+          ) : fixtures.length > 0 ? (
+            <div className="bg-gray-800 rounded-xl md:rounded-2xl border border-gray-700 overflow-x-auto shadow-xl md:shadow-2xl">
+              <table className="w-full text-xs md:text-sm text-gray-300 min-w-[500px]">
+                <tbody className="divide-y divide-gray-700/50">
+                  {fixtures.map((f) => (
+                    <tr 
+                      key={f.id} 
+                      onClick={() => handleRowClick(f)}
+                      className="hover:bg-gray-700 transition-colors duration-200 group cursor-pointer"
+                    >
+                      <td className="px-3 md:px-6 py-3 md:py-5 w-24 md:w-32 border-r border-gray-700/30">
+                        <div className="text-[10px] md:text-xs text-blue-400 font-semibold mb-0.5 md:mb-1">{f.date}</div>
+                        <div className="text-base md:text-lg text-white font-black">{f.time} <span className="text-[10px] md:text-xs text-gray-500 font-normal">WIB</span></div>
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-5 text-right w-1/3">
+                        <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors">{f.home_team}</span>
+                      </td>
+                      <td className="px-2 md:px-4 py-3 md:py-5 text-center">
+                        <div className="flex flex-col items-center justify-center gap-1 md:gap-1.5">
+                          <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded font-black tracking-widest">VS</span>
+                          <span className="text-[8px] md:text-[10px] text-gray-400 font-bold tracking-widest text-center whitespace-nowrap">{leagueMap[f.league_name] || f.league_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 md:px-6 py-3 md:py-5 text-left w-1/3 border-l border-gray-700/30">
+                        <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors">{f.away_team}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
+              <p className="text-gray-400 text-xs md:text-sm italic">Belum ada jadwal pertandingan dalam waktu dekat untuk 5 Liga Top Eropa.</p>
+            </div>
+          )}
+        </section>
 
-            {perfLoading ? (
-              <div className="bg-gray-800/20 border border-gray-700/50 rounded-xl p-10 text-center animate-pulse">
-                 <div className="inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                 <p className="text-gray-500 text-xs uppercase tracking-widest font-bold">Mengkalkulasi Performa AI Terbaru...</p>
-              </div>
-            ) : topPerformances.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {topPerformances.map((p, idx) => (
-                  <Link to="/performance" title={`Lihat performa ${leagueMap[p.league] || p.league}`} key={idx} className="bg-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-700 hover:border-orange-500/50 hover:shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all group block">
-                    <div className="flex justify-between items-center mb-3 md:mb-4">
-                      <span className="text-xs md:text-sm font-black text-orange-400 uppercase tracking-widest">{leagueMap[p.league] || p.league}</span>
-                      <span className="bg-gray-900 border border-gray-700 text-gray-400 text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded font-bold">{p.season}</span>
+        <section aria-labelledby="performance-heading">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
+            <div>
+              <h2 id="performance-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Rekor Performa AI</h2>
+              <p className="text-gray-400 text-xs md:text-sm mt-1">Tingkat akurasi tertinggi model pada musim kompetisi terbaru.</p>
+            </div>
+            <Link to="/performance" className="hidden sm:flex text-orange-400 hover:text-orange-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
+              Laporan Lengkap <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
+
+          {perfLoading ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 min-h-[180px]">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-gray-800 rounded-xl p-6 border border-gray-700 animate-pulse flex flex-col justify-between">
+                     <div className="flex justify-between w-full mb-6">
+                        <div className="h-4 w-20 bg-gray-700/50 rounded"></div>
+                        <div className="h-4 w-12 bg-gray-700/50 rounded"></div>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="h-2 w-full bg-gray-700/50 rounded"></div>
+                        <div className="h-2 w-full bg-gray-700/50 rounded"></div>
+                        <div className="h-2 w-full bg-gray-700/50 rounded"></div>
+                     </div>
+                  </div>
+                ))}
+             </div>
+          ) : topPerformances.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+              {topPerformances.map((p, idx) => (
+                <Link to="/performance" key={idx} className="bg-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-700 hover:border-orange-500/50 hover:shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all group block">
+                  <div className="flex justify-between items-center mb-3 md:mb-4">
+                    <span className="text-xs md:text-sm font-black text-orange-400 uppercase tracking-widest">{leagueMap[p.league] || p.league}</span>
+                    <span className="bg-gray-900 border border-gray-700 text-gray-400 text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded font-bold">{p.season}</span>
+                  </div>
+                  
+                  <div className="space-y-3 md:space-y-4">
+                    <div>
+                      <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1">
+                        <span>HDA (DNB)</span>
+                        <span className="text-white">{p.hda_accuracy}%</span>
+                      </div>
+                      <div className="w-full bg-gray-900 h-1 md:h-1.5 rounded-full overflow-hidden"><div className="bg-blue-500 h-full" style={{width: `${p.hda_accuracy}%`}}></div></div>
                     </div>
-                    
-                    <div className="space-y-3 md:space-y-4">
-                      <div>
-                        <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1">
-                          <span>HDA (DNB)</span>
-                          <span className="text-white">{p.hda_accuracy}%</span>
-                        </div>
-                        <div className="w-full bg-gray-900 h-1 md:h-1.5 rounded-full overflow-hidden"><div className="bg-blue-500 h-full" style={{width: `${p.hda_accuracy}%`}}></div></div>
+                    <div>
+                      <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1">
+                        <span>Over/Under</span>
+                        <span className="text-white">{p.ou_accuracy}%</span>
                       </div>
-                      <div>
-                        <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1">
-                          <span>Over/Under</span>
-                          <span className="text-white">{p.ou_accuracy}%</span>
-                        </div>
-                        <div className="w-full bg-gray-900 h-1 md:h-1.5 rounded-full overflow-hidden"><div className="bg-green-500 h-full" style={{width: `${p.ou_accuracy}%`}}></div></div>
+                      <div className="w-full bg-gray-900 h-1 md:h-1.5 rounded-full overflow-hidden"><div className="bg-green-500 h-full" style={{width: `${p.ou_accuracy}%`}}></div></div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1">
+                        <span>BTTS</span>
+                        <span className="text-white">{p.btts_accuracy}%</span>
                       </div>
-                      <div>
-                        <div className="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1">
-                          <span>BTTS</span>
-                          <span className="text-white">{p.btts_accuracy}%</span>
+                      <div className="w-full bg-gray-900 h-1 md:h-1.5 rounded-full overflow-hidden"><div className="bg-purple-500 h-full" style={{width: `${p.btts_accuracy}%`}}></div></div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
+              <p className="text-gray-400 text-xs md:text-sm italic">Belum ada data performa yang dihitung.</p>
+            </div>
+          )}
+        </section>
+
+        <section aria-labelledby="leaderboard-heading">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
+            <div>
+              <h2 id="leaderboard-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Top Prediktor Musim Ini</h2>
+              <p className="text-gray-400 text-xs md:text-sm mt-1">Pengguna dengan perolehan Koin Virtual tertinggi.</p>
+            </div>
+            <Link to="/leaderboard" className="hidden sm:flex text-yellow-400 hover:text-yellow-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
+              Peringkat Global <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
+
+          {loading ? (
+             <div className="bg-gray-800/40 rounded-2xl border border-gray-700/50 overflow-hidden min-h-[250px]">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-5 border-b border-gray-700/50 animate-pulse">
+                     <div className="flex items-center gap-6 w-full">
+                        <div className="h-6 w-6 bg-gray-700/50 rounded"></div>
+                        <div className="h-10 w-10 bg-gray-700/50 rounded-full hidden sm:block"></div>
+                        <div className="flex flex-col gap-2 w-1/3">
+                           <div className="h-4 w-full bg-gray-700/50 rounded"></div>
+                           <div className="h-3 w-1/2 bg-gray-700/50 rounded"></div>
                         </div>
-                        <div className="w-full bg-gray-900 h-1 md:h-1.5 rounded-full overflow-hidden"><div className="bg-purple-500 h-full" style={{width: `${p.btts_accuracy}%`}}></div></div>
+                     </div>
+                  </div>
+                ))}
+             </div>
+          ) : topLeaders.length > 0 ? (
+              <div className="bg-gray-800/40 rounded-2xl border border-gray-700/50 overflow-hidden shadow-lg">
+                  <ul className="divide-y divide-gray-700/50">
+                      {topLeaders.map((leader, index) => {
+                          const isTop3 = index < 3;
+                          let medal = '';
+                          let rankColor = 'text-gray-500';
+                          
+                          if (index === 0) { medal = '🥇'; rankColor = 'text-yellow-400'; }
+                          else if (index === 1) { medal = '🥈'; rankColor = 'text-gray-300'; }
+                          else if (index === 2) { medal = '🥉'; rankColor = 'text-orange-400'; }
+
+                          return (
+                              <li key={index} className={`flex items-center justify-between p-4 sm:p-5 hover:bg-gray-700/50 transition-colors ${index === 0 ? 'bg-gray-800/80' : ''}`}>
+                                  <div className="flex items-center gap-4 sm:gap-6">
+                                      <div className={`w-8 text-center font-black text-lg sm:text-xl ${rankColor}`}>
+                                          {isTop3 ? medal : `#${index + 1}`}
+                                      </div>
+                                      
+                                      <div className={`hidden sm:flex w-10 h-10 rounded-full items-center justify-center font-bold text-gray-900 ${index === 0 ? 'bg-yellow-400' : 'bg-gray-400'}`}>
+                                          {leader.username.charAt(0).toUpperCase()}
+                                      </div>
+
+                                      <div className="flex flex-col">
+                                          <span className={`font-bold sm:text-lg truncate max-w-[150px] sm:max-w-[300px] ${index === 0 ? 'text-white' : 'text-gray-200'}`}>
+                                              {leader.username}
+                                          </span>
+                                          <span className="text-yellow-500 font-black text-xs sm:text-sm mt-0.5 flex items-center gap-1">
+                                              🪙 {leader.points.toLocaleString()} <span className="text-gray-500 font-normal text-[10px] sm:text-xs">Koin</span>
+                                          </span>
+                                      </div>
+                                  </div>
+                              </li>
+                          );
+                      })}
+                  </ul>
+              </div>
+          ) : (
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
+              <p className="text-gray-400 text-xs md:text-sm italic">Belum ada pengguna yang masuk ke papan peringkat.</p>
+            </div>
+          )}
+          
+          <div className="mt-4 md:hidden text-center">
+             <Link to="/leaderboard" className="text-yellow-400 hover:text-yellow-300 font-bold text-xs uppercase tracking-wider inline-flex items-center transition-colors">
+                Peringkat Global <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+             </Link>
+          </div>
+        </section>
+
+        <section aria-labelledby="articles-heading">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
+            <div>
+              <h2 id="articles-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Artikel Terbaru</h2>
+              <p className="text-gray-400 text-xs md:text-sm mt-1">Insight teknologi, opini, dan pengembangan sistem.</p>
+            </div>
+            <Link to="/blog" className="hidden sm:flex text-purple-400 hover:text-purple-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
+              Ke Blog <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
+
+          {loading ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 min-h-[250px]">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-gray-800 rounded-xl border border-gray-700 p-6 animate-pulse flex flex-col justify-between">
+                     <div className="space-y-4">
+                        <div className="h-3 w-16 bg-gray-700/50 rounded-full"></div>
+                        <div className="h-5 w-full bg-gray-700/50 rounded"></div>
+                        <div className="h-5 w-2/3 bg-gray-700/50 rounded"></div>
+                     </div>
+                     <div className="mt-8 space-y-2">
+                        <div className="h-2 w-full bg-gray-700/50 rounded"></div>
+                        <div className="h-2 w-full bg-gray-700/50 rounded"></div>
+                        <div className="h-2 w-3/4 bg-gray-700/50 rounded"></div>
+                     </div>
+                  </div>
+                ))}
+             </div>
+          ) : articles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+              {articles.map((article) => (
+                <article key={article.id} className="h-full">
+                  <Link to={`/blog/${article.id}`} className="bg-gray-800 rounded-xl md:rounded-2xl border border-gray-700 overflow-hidden hover:border-gray-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300 group flex flex-col h-full">
+                    <div className="p-4 md:p-6 flex flex-col flex-grow">
+                      <span className={`inline-block w-max border px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold tracking-widest uppercase shadow-sm mb-3 md:mb-4 ${article.color}`}>
+                        {article.category}
+                      </span>
+                      <h3 className="text-base md:text-lg font-bold text-gray-100 group-hover:text-purple-400 transition-colors duration-200 mb-2 md:mb-3 leading-snug">
+                        {article.title}
+                      </h3>
+                      <p className="text-xs md:text-sm text-gray-400 line-clamp-3 mb-4 md:mb-6 flex-grow">
+                        {article.excerpt}
+                      </p>
+                      <div className="flex items-center justify-between text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wider mt-auto">
+                        <time dateTime={article.created_at}>🗓 {article.created_at}</time>
+                        <span className="text-purple-500 group-hover:translate-x-1 transition-transform">Baca &rarr;</span>
                       </div>
                     </div>
                   </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
-                <p className="text-gray-400 text-xs md:text-sm italic">Belum ada data performa yang dihitung.</p>
-              </div>
-            )}
-          </section>
-
-          {/* ================= LEADERBOARD (DESAIN DAFTAR/LIST) ================= */}
-          <section aria-labelledby="leaderboard-heading">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
-              <div>
-                <h2 id="leaderboard-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Top Prediktor Musim Ini</h2>
-                <p className="text-gray-400 text-xs md:text-sm mt-1">Pengguna dengan perolehan Koin Virtual tertinggi.</p>
-              </div>
-              <Link to="/leaderboard" title="Lihat Papan Peringkat Lengkap" className="hidden sm:flex text-yellow-400 hover:text-yellow-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
-                Peringkat Global <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
+                </article>
+              ))}
             </div>
-
-            {topLeaders.length > 0 ? (
-                <div className="bg-gray-800/40 rounded-2xl border border-gray-700/50 overflow-hidden shadow-lg">
-                    <ul className="divide-y divide-gray-700/50">
-                        {topLeaders.map((leader, index) => {
-                            const isTop3 = index < 3;
-                            let medal = '';
-                            let rankColor = 'text-gray-500';
-                            
-                            if (index === 0) { medal = '🥇'; rankColor = 'text-yellow-400'; }
-                            else if (index === 1) { medal = '🥈'; rankColor = 'text-gray-300'; }
-                            else if (index === 2) { medal = '🥉'; rankColor = 'text-orange-400'; }
-
-                            return (
-                                <li key={index} className={`flex items-center justify-between p-4 sm:p-5 hover:bg-gray-700/50 transition-colors ${index === 0 ? 'bg-gray-800/80' : ''}`}>
-                                    <div className="flex items-center gap-4 sm:gap-6">
-                                        <div className={`w-8 text-center font-black text-lg sm:text-xl ${rankColor}`}>
-                                            {isTop3 ? medal : `#${index + 1}`}
-                                        </div>
-                                        
-                                        <div className={`hidden sm:flex w-10 h-10 rounded-full items-center justify-center font-bold text-gray-900 ${index === 0 ? 'bg-yellow-400' : 'bg-gray-400'}`}>
-                                            {leader.username.charAt(0).toUpperCase()}
-                                        </div>
-
-                                        <div className="flex flex-col">
-                                            <span className={`font-bold sm:text-lg truncate max-w-[150px] sm:max-w-[300px] ${index === 0 ? 'text-white' : 'text-gray-200'}`}>
-                                                {leader.username}
-                                            </span>
-                                            <span className="text-yellow-500 font-black text-xs sm:text-sm mt-0.5 flex items-center gap-1">
-                                                🪙 {leader.points.toLocaleString()} <span className="text-gray-500 font-normal text-[10px] sm:text-xs">Koin</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
-            ) : (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
-                <p className="text-gray-400 text-xs md:text-sm italic">Belum ada pengguna yang masuk ke papan peringkat.</p>
-              </div>
-            )}
-            
-            <div className="mt-4 md:hidden text-center">
-               <Link to="/leaderboard" className="text-yellow-400 hover:text-yellow-300 font-bold text-xs uppercase tracking-wider inline-flex items-center transition-colors">
-                  Peringkat Global <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-               </Link>
+          ) : (
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
+              <p className="text-gray-400 text-xs md:text-sm italic">Belum ada artikel yang diterbitkan.</p>
             </div>
-          </section>
+          )}
+        </section>
 
-          {/* ================= ARTIKEL TERBARU ================= */}
-          <section aria-labelledby="articles-heading">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 border-b border-gray-800 pb-3 md:pb-4 gap-2">
-              <div>
-                <h2 id="articles-heading" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider">Artikel Terbaru</h2>
-                <p className="text-gray-400 text-xs md:text-sm mt-1">Insight teknologi, opini, dan pengembangan sistem.</p>
-              </div>
-              <Link to="/blog" title="Semua Artikel dan Blog" className="hidden sm:flex text-purple-400 hover:text-purple-300 font-bold text-xs md:text-sm uppercase tracking-wider items-center transition-colors">
-                Ke Blog <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-            </div>
+        <section className="max-w-4xl mx-auto pt-8 border-t border-gray-800/50">
+          <FaqItem index={0} title="Batasan Model (Disclaimer)" colorClass="text-blue-400">
+            <p>L1PREDIKSI-KAN dirancang sebagai alat bantu analitik berbasis data statistik historis, bukan alat ramalan pasti. Model AI kami murni mengandalkan metrik seperti performa tim, rekor pertemuan, selisih gol, dan pergerakan odds bursa taruhan.</p>
+            <br/>
+            <p>Oleh karena itu, model ini tidak dapat memperhitungkan faktor-faktor tak terduga (force majeure) di atas lapangan hijau. Insiden seperti kartu merah cepat, cedera pemain kunci saat pemanasan, keputusan kontroversial VAR, cuaca ekstrem, atau tembakan yang membentur tiang gawang adalah murni dinamika sepak bola yang berada di luar jangkauan komputasi matematika. Kami sangat menyarankan Anda untuk menggunakan persentase prediksi ini hanya sebagai wawasan tambahan (insight) dan referensi pembanding, bukan sebagai jaminan mutlak untuk hasil akhir suatu pertandingan.</p>
+          </FaqItem>
+          
+          <FaqItem index={1} title="Tentang Prediksi-Kan" colorClass="text-blue-400">
+            L1Prediksi-Kan adalah sebuah platform analitik cerdas yang didedikasikan untuk para penggemar sepak bola dan penikmat data statistik. Kami membangun sebuah mesin komputasi yang mampu menganalisis ribuan data pertandingan historis secara otomatis untuk menemukan pola tersembunyi yang seringkali terlewatkan oleh analisis manusia biasa.<br/><br/>
+            Visi utama platform ini adalah menghadirkan transparansi data dan memberikan pandangan yang lebih objektif dalam memetakan kekuatan dua tim yang akan bertanding. Dengan memadukan metrik performa lanjutan seperti Elo Rating, dinamika formasi, serta tren probabilitas bursa global, L1Prediksi-Kan bertujuan menjadi asisten virtual terbaik Anda dalam membaca arah pertandingan sebelum peluit kick-off dibunyikan.
+          </FaqItem>
+          
+          <FaqItem index={2} title="Daftar Liga & Cara Kerja" colorClass="text-blue-400">
+            <p>Sistem kami secara aktif memonitor dan menganalisis pertandingan dari 11 kompetisi bergengsi di Eropa, yaitu: <strong>English Premier League, Serie A Italia, Bundesliga Jerman, La Liga Spanyol, Ligue 1 Prancis, Eredivisie Belanda, Pro League Belgia, Liga Portugal Betclic, Scottish Premiership, Trendyol Süper Lig Turki, dan Stoiximan Super League Yunani.</strong></p>
+            <br/>
+            <p>Untuk melakukan prediksi, Anda cukup masuk ke menu <strong>'Jadwal Laga'</strong>, pilih pertandingan yang ingin dianalisis, lalu sistem akan memproses data tersebut secara real-time di Terminal Prediksi.</p>
+            <br/>
+            <p>Sebagai fitur interaktif, kami juga menyediakan sistem <strong>'Portofolio Prediksi'</strong>. Setiap pengguna baru yang mendaftar akan mendapatkan modal awal sebesar <strong>1.000 Koin Virtual</strong> secara gratis. Anda dapat menggunakan koin ini untuk 'bertaruh' pada prediksi AI yang Anda yakini. Jika tebakan Anda tepat setelah laga dunia nyata selesai, koin Anda akan bertambah sesuai dengan nilai odds pertandingan tersebut. Anda bisa memantau peringkat Anda melawan pengguna lain di menu 'Peringkat Global'!</p>
+          </FaqItem>
+        </section>
 
-            {articles.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {articles.map((article) => (
-                  <article key={article.id} className="h-full">
-                    <Link to={`/blog/${article.id}`} title={`Baca Artikel: ${article.title}`} className="bg-gray-800 rounded-xl md:rounded-2xl border border-gray-700 overflow-hidden hover:border-gray-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300 group flex flex-col h-full">
-                      <div className="p-4 md:p-6 flex flex-col flex-grow">
-                        <span className={`inline-block w-max border px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold tracking-widest uppercase shadow-sm mb-3 md:mb-4 ${article.color}`}>
-                          {article.category}
-                        </span>
-                        <h3 className="text-base md:text-lg font-bold text-gray-100 group-hover:text-purple-400 transition-colors duration-200 mb-2 md:mb-3 leading-snug">
-                          {article.title}
-                        </h3>
-                        <p className="text-xs md:text-sm text-gray-400 line-clamp-3 mb-4 md:mb-6 flex-grow">
-                          {article.excerpt}
-                        </p>
-                        <div className="flex items-center justify-between text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wider mt-auto">
-                          <time dateTime={article.created_at}>🗓 {article.created_at}</time>
-                          <span className="text-purple-500 group-hover:translate-x-1 transition-transform">Baca &rarr;</span>
-                        </div>
-                      </div>
-                    </Link>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl md:rounded-2xl p-6 md:p-10 text-center">
-                <p className="text-gray-400 text-xs md:text-sm italic">Belum ada artikel yang diterbitkan.</p>
-              </div>
-            )}
-          </section>
-
-          {/* ================= FAQ / INFORMASI SISTEM ================= */}
-          <section className="max-w-4xl mx-auto pt-8 border-t border-gray-800/50">
-            <FaqItem 
-              index={0} 
-              title="Batasan Model (Disclaimer)"  
-              colorClass="text-blue-400"
-            >
-              <p>L1PREDIKSI-KAN dirancang sebagai alat bantu analitik berbasis data statistik historis, bukan alat ramalan pasti. Model AI kami murni mengandalkan metrik seperti performa tim, rekor pertemuan, selisih gol, dan pergerakan odds bursa taruhan.</p>
-              <br/>
-              <p>Oleh karena itu, model ini tidak dapat memperhitungkan faktor-faktor tak terduga (force majeure) di atas lapangan hijau. Insiden seperti kartu merah cepat, cedera pemain kunci saat pemanasan, keputusan kontroversial VAR, cuaca ekstrem, atau tembakan yang membentur tiang gawang adalah murni dinamika sepak bola yang berada di luar jangkauan komputasi matematika. Kami sangat menyarankan Anda untuk menggunakan persentase prediksi ini hanya sebagai wawasan tambahan (insight) dan referensi pembanding, bukan sebagai jaminan mutlak untuk hasil akhir suatu pertandingan.</p>
-            </FaqItem>
-            
-            <FaqItem 
-              index={1} 
-              title="Tentang Prediksi-Kan" 
-              colorClass="text-blue-400"
-            >
-              L1Prediksi-Kan adalah sebuah platform analitik cerdas yang didedikasikan untuk para penggemar sepak bola dan penikmat data statistik. Kami membangun sebuah mesin komputasi yang mampu menganalisis ribuan data pertandingan historis secara otomatis untuk menemukan pola tersembunyi yang seringkali terlewatkan oleh analisis manusia biasa.<br/><br/>
-              Visi utama platform ini adalah menghadirkan transparansi data dan memberikan pandangan yang lebih objektif dalam memetakan kekuatan dua tim yang akan bertanding. Dengan memadukan metrik performa lanjutan seperti Elo Rating, dinamika formasi, serta tren probabilitas bursa global, L1Prediksi-Kan bertujuan menjadi asisten virtual terbaik Anda dalam membaca arah pertandingan sebelum peluit *kick-off* dibunyikan.
-            </FaqItem>
-            
-            <FaqItem 
-              index={2} 
-              title="Daftar Liga & Cara Kerja" 
-              colorClass="text-blue-400"
-            >
-              <p>Sistem kami secara aktif memonitor dan menganalisis pertandingan dari 11 kompetisi bergengsi di Eropa, yaitu: <strong>English Premier League, Serie A Italia, Bundesliga Jerman, La Liga Spanyol, Ligue 1 Prancis, Eredivisie Belanda, Pro League Belgia, Liga Portugal Betclic, Scottish Premiership, Trendyol Süper Lig Turki, dan Stoiximan Super League Yunani.</strong></p>
-              <br/>
-              <p>Untuk melakukan prediksi, Anda cukup masuk ke menu <strong>'Jadwal Laga'</strong>, pilih pertandingan yang ingin dianalisis, lalu sistem akan memproses data tersebut secara <em>real-time</em> di Terminal Prediksi.</p>
-              <br/>
-              <p>Sebagai fitur interaktif, kami juga menyediakan sistem <strong>'Portofolio Prediksi'</strong>. Setiap pengguna baru yang mendaftar akan mendapatkan modal awal sebesar <strong>1.000 Koin Virtual</strong> secara gratis. Anda dapat menggunakan koin ini untuk 'bertaruh' pada prediksi AI yang Anda yakini. Jika tebakan Anda tepat setelah laga dunia nyata selesai, koin Anda akan bertambah sesuai dengan nilai <em>odds</em> pertandingan tersebut. Anda bisa memantau peringkat Anda melawan pengguna lain di menu 'Peringkat Global'!</p>
-            </FaqItem>
-          </section>
-
-        </div>
-      )}
+      </div>
 
       <footer className="bg-gray-950 border-t border-gray-800 mt-12 md:mt-20">
         <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">

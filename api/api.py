@@ -604,6 +604,10 @@ def preview_csv(request, file: UploadedFile = File(...)):
     content = raw_data.decode('windows-1252', errors='replace')
     df = pd.read_csv(io.StringIO(content))
     
+    df.columns = df.columns.str.replace('ï»¿', '').str.replace('\ufeff', '').str.strip()
+    if 'Div' not in df.columns and len(df.columns) > 0:
+        df.rename(columns={df.columns[0]: 'Div'}, inplace=True)
+
     df = df.dropna(subset=['HomeTeam', 'AwayTeam'])
     if 'Time' not in df.columns:
         df['Time'] = '12:00'
@@ -650,7 +654,7 @@ def preview_csv(request, file: UploadedFile = File(...)):
             
             pair = tuple(sorted([home, away]))
             if pair not in h2h_dict:
-                past_matches = MatchRecord.objects.filter(
+                past_matches = MatchRecord.objects.select_related('home_team', 'away_team').filter(
                     Q(home_team__name=home, away_team__name=away) | Q(home_team__name=away, away_team__name=home)
                 ).order_by('date', 'time')
                 db_h2h = []

@@ -18,6 +18,7 @@ class League(models.Model):
 class Team(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE, related_name='teams')
     name = models.CharField(max_length=100)
+    logo = models.URLField(max_length=500, blank=True, null=True)
     elo_rating = models.FloatField(default=1500.0)
     pts_last_5 = models.IntegerField(default=0)
     avg_gf = models.FloatField(default=0.0)
@@ -124,3 +125,27 @@ class LeaguePerformance(models.Model):
 
     def __str__(self):
         return f"{self.league_name} - {self.season}"
+
+class Standing(models.Model):
+    league = models.ForeignKey(League, on_delete=models.CASCADE, related_name='standings')
+    season = models.IntegerField()
+    rank = models.IntegerField()
+    team_name = models.CharField(max_length=100)
+    team_logo = models.URLField(max_length=500, blank=True, null=True)
+    points = models.IntegerField(default=0)
+    played = models.IntegerField(default=0)
+    win = models.IntegerField(default=0)
+    draw = models.IntegerField(default=0)
+    lose = models.IntegerField(default=0)
+    goals_for = models.IntegerField(default=0)
+    goals_against = models.IntegerField(default=0)
+    goal_diff = models.IntegerField(default=0)
+    form = models.CharField(max_length=20, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('league', 'season', 'team_name')
+        ordering = ['rank']
+
+    def __str__(self):
+        return f"{self.rank}. {self.team_name} - {self.league.name} ({self.season})"

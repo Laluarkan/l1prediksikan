@@ -1,3 +1,4 @@
+from datetime import timedelta
 from .models import MatchRecord, UserBet, LeaguePerformance
 
 def update_league_performance(league_name: str):
@@ -49,7 +50,15 @@ def update_league_performance(league_name: str):
 def process_bet_settlements():
     pending_bets = UserBet.objects.filter(status='Pending')
     for bet in pending_bets:
-        match = MatchRecord.objects.filter(date=bet.match_date, home_team__name=bet.home_team, away_team__name=bet.away_team).first()
+        start_date = bet.match_date - timedelta(days=2)
+        end_date = bet.match_date + timedelta(days=2)
+        
+        match = MatchRecord.objects.filter(
+            date__range=[start_date, end_date],
+            home_team__name=bet.home_team,
+            away_team__name=bet.away_team
+        ).first()
+        
         if match:
             won = False
             if bet.bet_category == 'DNB':

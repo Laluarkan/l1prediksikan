@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
-from .models import League, Team, MatchRecord, Fixture, Article, UserProfile, UserBet, LeaguePerformance
+from .models import League, Team, MatchRecord, Fixture, Article, UserProfile, UserBet, LeaguePerformance, Standing
 from .schemas import *
 from .services import update_league_performance, process_bet_settlements
 
@@ -155,7 +155,18 @@ def place_bet(request, payload: BetIn):
 def get_bet_history(request):
     user = get_user_from_request(request)
     if not user: return api.create_response(request, {"detail": "Unauthorized"}, status=401)
-    return UserBet.objects.filter(user=user).order_by('-created_at')
+    
+    bets = list(UserBet.objects.filter(user=user).order_by('-created_at'))
+    
+    team_names = set([b.home_team for b in bets] + [b.away_team for b in bets])
+    teams = Team.objects.filter(name__in=team_names)
+    logo_dict = {t.name: t.logo for t in teams if t.logo}
+    
+    for b in bets:
+        b.home_logo = logo_dict.get(b.home_team)
+        b.away_logo = logo_dict.get(b.away_team)
+        
+    return bets
 
 @api.get("/leaderboard", response=List[LeaderboardOut])
 def get_leaderboard(request):
@@ -185,6 +196,15 @@ def get_teams(request, league_name: str):
                 else: form.append('D')
         team.calculated_form = "".join(reversed(form))
     return teams
+
+@api.get("/standings/{league_name}", response=List[StandingOut])
+def get_standings(request, league_name: str):
+    latest_standing = Standing.objects.filter(league__name=league_name).order_by('-season').first()
+    if not latest_standing:
+        return []
+    
+    latest_season = latest_standing.season
+    return Standing.objects.filter(league__name=league_name, season=latest_season).order_by('rank')
 
 @api.post("/predict", response=PredictionOut)
 def predict_match(request, payload: PredictIn):
@@ -285,12 +305,21 @@ def get_fixtures(request):
     now_wib = pd.Timestamp.now(tz='Asia/Jakarta').tz_localize(None)
     fixtures = Fixture.objects.select_related('league').all().order_by('date', 'time')
     valid_fixtures = []
+
+    team_names = set([f.home_team for f in fixtures] + [f.away_team for f in fixtures])
+    teams = Team.objects.filter(name__in=team_names)
+    logo_dict = {t.name: t.logo for t in teams if t.logo}
+
     for f in fixtures:
         match_dt = datetime.combine(f.date, f.time)
         if match_dt >= now_wib:
             valid_fixtures.append({
                 "id": f.id, "league_name": f.league.name, "date": str(f.date),
-                "time": f.time.strftime('%H:%M'), "home_team": f.home_team, "away_team": f.away_team,
+                "time": f.time.strftime('%H:%M'), 
+                "home_team": f.home_team, 
+                "home_logo": logo_dict.get(f.home_team),
+                "away_team": f.away_team,
+                "away_logo": logo_dict.get(f.away_team),
                 "odds_h": f.odds_h, "odds_d": f.odds_d, "odds_a": f.odds_a,
                 "odds_over": f.odds_over, "odds_under": f.odds_under
             })

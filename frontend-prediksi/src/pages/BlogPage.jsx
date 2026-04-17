@@ -187,9 +187,9 @@ export default function BlogPage({ user }) {
 
                   <div className="p-5 md:p-6 flex flex-col flex-grow">
                     <div className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs font-semibold text-gray-500 mb-2 md:mb-3 uppercase tracking-wider">
-                      <time dateTime={article.created_at}>🗓 {article.created_at}</time>
+                      <time dateTime={article.created_at}>{article.created_at}</time>
                       <span>•</span>
-                      <span>⏱ {article.read_time}</span>
+                      <span>{article.read_time}</span>
                     </div>
                     
                     <h2 className="text-lg md:text-xl font-bold text-gray-100 group-hover:text-blue-400 transition-colors duration-200 mb-2 md:mb-3 leading-snug">

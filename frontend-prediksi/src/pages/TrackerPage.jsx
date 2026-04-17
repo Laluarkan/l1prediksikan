@@ -65,30 +65,56 @@ export default function TrackerPage({ user }) {
         ) : bets.length > 0 ? (
             <div className="overflow-x-auto max-h-[600px] scrollbar-thin">
                 <table className="w-full text-xs md:text-sm text-gray-300 min-w-[700px]">
-                    <thead className="text-[10px] text-gray-500 uppercase bg-gray-900 sticky top-0">
+                    <thead className="text-[10px] text-gray-500 uppercase bg-gray-900 sticky top-0 z-10">
                         <tr>
-                            <th className="px-4 py-3 text-left">Waktu Pasang</th>
-                            <th className="px-4 py-3 text-left">Pertandingan</th>
-                            <th className="px-4 py-3 text-center">Kategori</th>
-                            <th className="px-4 py-3 text-center">Pilihan</th>
-                            <th className="px-4 py-3 text-center">Odds</th>
-                            <th className="px-4 py-3 text-center">Koin</th>
-                            <th className="px-4 py-3 text-center">Status</th>
+                            <th className="px-4 py-4 text-left">Waktu Pasang</th>
+                            <th className="px-4 py-4 text-center">Pertandingan</th>
+                            <th className="px-4 py-4 text-center">Kategori</th>
+                            <th className="px-4 py-4 text-center">Pilihan</th>
+                            <th className="px-4 py-4 text-center">Odds</th>
+                            <th className="px-4 py-4 text-center">Koin</th>
+                            <th className="px-4 py-4 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700/50">
                         {bets.map(b => (
-                            <tr key={b.id} className="hover:bg-gray-700/50">
-                                <td className="px-4 py-4 text-gray-400">{b.created_at}</td>
-                                <td className="px-4 py-4 font-bold text-white">
-                                    {b.home_team} <span className="text-gray-500 font-normal mx-1">vs</span> {b.away_team}
+                            <tr key={b.id} className="hover:bg-gray-700/50 transition-colors">
+                                <td className="px-4 py-5 text-gray-400 align-middle whitespace-nowrap">{b.created_at}</td>
+                                <td className="px-4 py-5 align-middle">
+                                    <div className="flex items-center justify-center gap-2 md:gap-4 min-w-[280px]">
+                                        
+                                        <div className="flex items-center justify-end gap-2 md:gap-3 flex-1">
+                                            {b.home_logo ? (
+                                                <img src={b.home_logo} alt={b.home_team} className="w-5 h-5 md:w-6 md:h-6 object-contain shrink-0" />
+                                            ) : (
+                                                <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-700 rounded-full shrink-0" />
+                                            )}
+                                            <span className="font-bold text-white text-xs md:text-sm text-right leading-tight">{b.home_team}</span>
+                                        </div>
+                                        
+                                        <div className="shrink-0 flex items-center justify-center px-1">
+                                            <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
+                                                VS
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-start gap-2 md:gap-3 flex-1">
+                                            <span className="font-bold text-white text-xs md:text-sm text-left leading-tight">{b.away_team}</span>
+                                            {b.away_logo ? (
+                                                <img src={b.away_logo} alt={b.away_team} className="w-5 h-5 md:w-6 md:h-6 object-contain shrink-0" />
+                                            ) : (
+                                                <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-700 rounded-full shrink-0" />
+                                            )}
+                                        </div>
+
+                                    </div>
                                 </td>
-                                <td className="px-4 py-4 text-center font-bold text-indigo-400">{b.bet_category}</td>
-                                <td className="px-4 py-4 text-center text-blue-300">{b.bet_choice}</td>
-                                <td className="px-4 py-4 text-center">{b.odds.toFixed(2)}</td>
-                                <td className="px-4 py-4 text-center text-yellow-400 font-bold">{b.stake}</td>
-                                <td className="px-4 py-4 text-center">
-                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider
+                                <td className="px-4 py-5 text-center font-bold text-indigo-400 align-middle whitespace-nowrap">{b.bet_category}</td>
+                                <td className="px-4 py-5 text-center text-blue-300 font-semibold align-middle">{b.bet_choice}</td>
+                                <td className="px-4 py-5 text-center font-medium align-middle">{b.odds.toFixed(2)}</td>
+                                <td className="px-4 py-5 text-center text-yellow-400 font-black align-middle">{b.stake}</td>
+                                <td className="px-4 py-5 text-center align-middle whitespace-nowrap">
+                                    <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider
                                         ${b.status === 'Won' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 
                                           b.status === 'Lost' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 
                                           b.status === 'Refund' ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30' :
@@ -103,7 +129,7 @@ export default function TrackerPage({ user }) {
                 </table>
             </div>
         ) : (
-            <div className="text-center py-20 text-gray-500">Anda belum pernah memasang taruhan virtual.</div>
+            <div className="text-center py-20 text-gray-500 font-medium">Anda belum pernah memasang taruhan virtual.</div>
         )}
       </section>
     </main>

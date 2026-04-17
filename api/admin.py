@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, League, Team, MatchRecord, Fixture, Article, LeaguePerformance, UserBet
+from .models import UserProfile, League, Team, MatchRecord, Fixture, Article, LeaguePerformance, UserBet, Standing
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -13,7 +13,7 @@ class LeagueAdmin(admin.ModelAdmin):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('name', 'league', 'elo_rating', 'pts_last_5')
+    list_display = ('name', 'league', 'elo_rating', 'pts_last_5', 'logo')
     list_filter = ('league',)
     search_fields = ('name',)
     ordering = ('league', 'name')
@@ -54,3 +54,11 @@ class UserBetAdmin(admin.ModelAdmin):
     list_filter = ('status', 'league', 'bet_category')
     search_fields = ('user__username', 'home_team', 'away_team')
     date_hierarchy = 'match_date'
+
+@admin.register(Standing)
+class StandingAdmin(admin.ModelAdmin):
+    list_display = ('rank', 'team_name', 'league', 'season', 'points', 'played', 'goal_diff')
+    list_filter = ('league', 'season')
+    search_fields = ('team_name',)
+    ordering = ('league', 'season', 'rank')
+    list_select_related = ('league',)

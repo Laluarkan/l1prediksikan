@@ -198,18 +198,39 @@ export default function HomePage() {
                         <div className="text-[10px] md:text-xs text-blue-400 font-semibold mb-0.5 md:mb-1">{f.date}</div>
                         <div className="text-base md:text-lg text-white font-black">{f.time} <span className="text-[10px] md:text-xs text-gray-500 font-normal">WIB</span></div>
                       </td>
-                      <td className="px-3 md:px-6 py-3 md:py-5 text-right w-1/3">
-                        <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors">{f.home_team}</span>
+                      
+                      <td className="px-2 md:px-4 py-3 md:py-5 align-middle">
+                          <div className="flex items-center justify-center gap-2 md:gap-4 w-full">
+                              
+                              {/* Tim Kandang (Kiri) */}
+                              <div className="flex items-center justify-end gap-2 md:gap-3 flex-1">
+                                  {f.home_logo ? (
+                                      <img src={f.home_logo} alt={f.home_team} className="w-5 h-5 md:w-6 md:h-6 object-contain shrink-0" />
+                                  ) : (
+                                      <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-700 rounded-full shrink-0" />
+                                  )}
+                                  <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors text-right leading-tight">{f.home_team}</span>
+                              </div>
+                              
+                              {/* Logo VS & Nama Liga (Tengah) */}
+                              <div className="shrink-0 flex flex-col items-center justify-center gap-1 md:gap-1.5 px-2">
+                                  <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded font-black tracking-widest shadow-sm">VS</span>
+                                  <span className="text-[8px] md:text-[10px] text-gray-400 font-bold tracking-widest text-center whitespace-nowrap">{leagueMap[f.league_name] || f.league_name}</span>
+                              </div>
+                              
+                              {/* Tim Tandang (Kanan) */}
+                              <div className="flex items-center justify-start gap-2 md:gap-3 flex-1">
+                                  <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors text-left leading-tight">{f.away_team}</span>
+                                  {f.away_logo ? (
+                                      <img src={f.away_logo} alt={f.away_team} className="w-5 h-5 md:w-6 md:h-6 object-contain shrink-0" />
+                                  ) : (
+                                      <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-700 rounded-full shrink-0" />
+                                  )}
+                              </div>
+
+                          </div>
                       </td>
-                      <td className="px-2 md:px-4 py-3 md:py-5 text-center">
-                        <div className="flex flex-col items-center justify-center gap-1 md:gap-1.5">
-                          <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded font-black tracking-widest">VS</span>
-                          <span className="text-[8px] md:text-[10px] text-gray-400 font-bold tracking-widest text-center whitespace-nowrap">{leagueMap[f.league_name] || f.league_name}</span>
-                        </div>
-                      </td>
-                      <td className="px-3 md:px-6 py-3 md:py-5 text-left w-1/3 border-l border-gray-700/30">
-                        <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors">{f.away_team}</span>
-                      </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -411,7 +432,7 @@ export default function HomePage() {
                         {article.excerpt}
                       </p>
                       <div className="flex items-center justify-between text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wider mt-auto">
-                        <time dateTime={article.created_at}>🗓 {article.created_at}</time>
+                        <time dateTime={article.created_at}>{article.created_at}</time>
                         <span className="text-purple-500 group-hover:translate-x-1 transition-transform">Baca &rarr;</span>
                       </div>
                     </div>

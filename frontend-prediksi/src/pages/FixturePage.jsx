@@ -9,10 +9,8 @@ export default function FixturePage({ user }) {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   
-  // STATE BARU: Untuk menyimpan input pencarian dari pengguna
   const [searchTerm, setSearchTerm] = useState('')
 
-  // KAMUS NAMA LIGA
   const leagueMap = {
     'E0': 'Premier League', 'I1': 'Serie A', 'D1': 'Bundesliga', 'SP1': 'La Liga', 'F1': 'Ligue 1',
     'N1': 'Eredivisie', 'B1': 'Pro League', 'P1': 'Liga Portugal Betclic', 'SC0': 'Scottish Premiership', 'T1': 'Trendyol Süper Lig', 'G1': 'Stoiximan Super League'
@@ -57,7 +55,6 @@ export default function FixturePage({ user }) {
       } else {
         alert("Gagal mengunggah jadwal.")
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (err) {
       alert("Gagal menghubungi server.")
     } finally {
@@ -69,8 +66,6 @@ export default function FixturePage({ user }) {
     navigate('/predict', { state: { fixtureData: fixture } })
   }
 
-  // LOGIKA PENCARIAN (FILTERING)
-  // Menyaring array fixtures berdasarkan searchTerm (huruf kecil semua agar tidak case-sensitive)
   const filteredFixtures = fixtures.filter((f) => {
     const searchLower = searchTerm.toLowerCase()
     const homeTeamLower = f.home_team.toLowerCase()
@@ -143,7 +138,6 @@ export default function FixturePage({ user }) {
                 </div>
             </div>
 
-            {/* SEKSI PENCARIAN (SEARCH BAR) */}
             <div className="w-full relative mt-2">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg className="w-4 h-4 md:w-5 md:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -155,7 +149,6 @@ export default function FixturePage({ user }) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-600 rounded-lg py-2 md:py-3 pl-10 pr-4 text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-500"
                 />
-                {/* Tombol Clear (X) jika ada input pencarian */}
                 {searchTerm && (
                     <button 
                         onClick={() => setSearchTerm('')}
@@ -179,14 +172,11 @@ export default function FixturePage({ user }) {
               <thead className="text-[10px] md:text-[11px] text-gray-500 uppercase bg-gray-900/90 border-b border-gray-700 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                   <th className="px-3 md:px-6 py-3 md:py-4 font-bold tracking-widest text-left w-24 md:w-32">Waktu WIB</th>
-                  <th className="px-2 md:px-4 py-3 md:py-4 font-bold tracking-widest text-right">Tim Kandang</th>
-                  <th className="px-1 md:px-2 py-3 md:py-4 font-bold tracking-widest text-center w-10 md:w-12"></th>
-                  <th className="px-2 md:px-4 py-3 md:py-4 font-bold tracking-widest text-left">Tim Tandang</th>
+                  <th className="px-2 md:px-4 py-3 md:py-4 font-bold tracking-widest text-center">Pertandingan</th>
                   <th className="px-3 md:px-6 py-3 md:py-4 font-bold tracking-widest text-center">Liga</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
-                {/* LOOP MENGGUNAKAN DATA YANG SUDAH DIFILTER */}
                 {filteredFixtures.map((f) => (
                   <tr 
                     key={f.id} 
@@ -201,19 +191,38 @@ export default function FixturePage({ user }) {
                         </div>
                     </td>
                     
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-right">
-                        <span className="font-bold text-xs md:text-base text-gray-200 group-hover:text-blue-400 transition-colors">{f.home_team}</span>
-                    </td>
-                    
-                    <td className="px-1 md:px-2 py-3 md:py-4 text-center">
-                        <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 md:py-1 rounded font-black tracking-widest shadow-sm">VS</span>
-                    </td>
-                    
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-left border-l border-gray-700/30">
-                        <span className="font-bold text-xs md:text-base text-gray-200 group-hover:text-blue-400 transition-colors">{f.away_team}</span>
+                    <td className="px-2 md:px-4 py-3 md:py-4 align-middle">
+                        <div className="flex items-center justify-center gap-2 md:gap-4 w-full">
+                            
+                            {/* Tim Kandang (Kiri) */}
+                            <div className="flex items-center justify-end gap-2 md:gap-3 flex-1">
+                                {f.home_logo ? (
+                                    <img src={f.home_logo} alt={f.home_team} className="w-5 h-5 md:w-6 md:h-6 object-contain shrink-0" />
+                                ) : (
+                                    <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-700 rounded-full shrink-0" />
+                                )}
+                                <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors text-right leading-tight">{f.home_team}</span>
+                            </div>
+                            
+                            {/* Logo VS (Tengah) */}
+                            <div className="shrink-0 flex items-center justify-center px-2">
+                                <span className="bg-gray-900 border border-gray-700 text-gray-500 text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 md:py-1 rounded font-black tracking-widest shadow-sm">VS</span>
+                            </div>
+                            
+                            {/* Tim Tandang (Kanan) */}
+                            <div className="flex items-center justify-start gap-2 md:gap-3 flex-1">
+                                <span className="font-bold text-sm md:text-lg text-gray-100 group-hover:text-blue-400 transition-colors text-left leading-tight">{f.away_team}</span>
+                                {f.away_logo ? (
+                                    <img src={f.away_logo} alt={f.away_team} className="w-5 h-5 md:w-6 md:h-6 object-contain shrink-0" />
+                                ) : (
+                                    <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-700 rounded-full shrink-0" />
+                                )}
+                            </div>
+
+                        </div>
                     </td>
 
-                    <td className="px-3 md:px-6 py-3 md:py-4 text-center whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-3 md:py-4 text-center whitespace-nowrap border-l border-gray-700/30">
                         <span className="bg-gray-700/50 text-blue-300 border border-blue-500/30 px-2 md:px-3 py-1 md:py-1.5 rounded text-[10px] md:text-xs font-bold tracking-widest shadow-sm inline-block">
                             {leagueMap[f.league_name] || f.league_name}
                         </span>
@@ -225,7 +234,6 @@ export default function FixturePage({ user }) {
           </div>
         ) : (
           <div className="text-center py-16 md:py-24 bg-gray-900/30 px-4 flex flex-col items-center justify-center">
-            {/* Tampilan khusus jika hasil pencarian tidak ditemukan */}
             {searchTerm && fixtures.length > 0 ? (
                 <>
                     <svg className="w-12 h-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

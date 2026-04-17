@@ -9,6 +9,7 @@ const PredictPage = lazy(() => import('./pages/PredictPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const PerformancePage = lazy(() => import('./pages/PerformancePage'));
 const FixturePage = lazy(() => import('./pages/FixturePage'));
+const StandingsPage = lazy(() => import('./pages/StandingsPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const ArticleDetailPage = lazy(() => import('./pages/ArticleDetailPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -49,6 +50,7 @@ function Navigation({ user, handleLogout }) {
     { name: 'Beranda', path: '/' },
     { name: 'Prediksi', path: '/predict' },
     { name: 'Jadwal', path: '/fixtures' },
+    { name: 'Klasemen', path: '/standings' },
     { name: 'Performa', path: '/performance' },
     { name: 'Blog', path: '/blog' },
     { name: 'Peringkat', path: '/leaderboard' },
@@ -284,6 +286,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/predict" element={<PredictPage />} />
                   <Route path="/fixtures" element={<FixturePage user={user} />} />
+                  <Route path="/standings" element={<StandingsPage />} />
                   <Route path="/blog" element={<BlogPage user={user} />} />
                   <Route path="/performance" element={<PerformancePage />} />
                   <Route path="/blog/:id" element={<ArticleDetailPage />} />

@@ -121,7 +121,6 @@ export default function PredictPage() {
         const data = await res.json()
         if (res.ok) alert("Koin berhasil dipasang! Cek halaman Portofolio Anda.")
         else alert(data.detail || "Gagal memasang koin.")
-    // eslint-disable-next-line no-unused-vars
     } catch (e) { 
         alert("Server error.") 
     } finally { 
@@ -176,7 +175,6 @@ export default function PredictPage() {
                 <label className="block text-xs font-medium text-gray-400 mb-1">Liga</label>
                 <select className="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none" value={selectedLeague} onChange={(e) => setSelectedLeague(e.target.value)} required>
                   <option value="">-- Pilih Liga --</option>
-                  {/* PENERJEMAHAN KODE LIGA KE NAMA ASLI */ }
                   {leagues.map(l => <option key={l.name} value={l.name}>{leagueMap[l.name] || l.name}</option>)}
                 </select>
               </div>
@@ -200,9 +198,23 @@ export default function PredictPage() {
               <div className="bg-gray-900/50 p-4 md:p-6 rounded-xl border border-gray-700 mt-4 md:mt-6 shadow-inner">
                 <div className="grid grid-cols-3 gap-y-4 md:gap-y-5 text-center items-center">
                   
-                  <div className="font-bold text-blue-400 text-sm md:text-lg truncate px-1">{homeData.name}</div>
+                  <div className="flex flex-col items-center gap-2 px-1">
+                      {homeData.logo ? (
+                          <img src={homeData.logo} alt={homeData.name} className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-md" />
+                      ) : (
+                          <div className="w-10 h-10 md:w-14 md:h-14 bg-gray-700 rounded-full" />
+                      )}
+                      <div className="font-bold text-blue-400 text-sm md:text-lg truncate w-full">{homeData.name}</div>
+                  </div>
                   <div className="font-medium text-gray-500 text-[9px] md:text-xs uppercase tracking-widest">Parameter</div>
-                  <div className="font-bold text-red-400 text-sm md:text-lg truncate px-1">{awayData.name}</div>
+                  <div className="flex flex-col items-center gap-2 px-1">
+                      {awayData.logo ? (
+                          <img src={awayData.logo} alt={awayData.name} className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-md" />
+                      ) : (
+                          <div className="w-10 h-10 md:w-14 md:h-14 bg-gray-700 rounded-full" />
+                      )}
+                      <div className="font-bold text-red-400 text-sm md:text-lg truncate w-full">{awayData.name}</div>
+                  </div>
                   
                   <div className="text-gray-200 font-semibold text-xs md:text-base">{homeData.elo_rating.toFixed(2)}</div>
                   <div className="text-gray-400 text-[10px] md:text-sm">Elo Rating</div>

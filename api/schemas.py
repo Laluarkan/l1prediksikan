@@ -1,5 +1,5 @@
 from ninja import Schema
-from typing import List
+from typing import List, Optional
 
 class AuthRegisterIn(Schema):
     username: str
@@ -24,6 +24,7 @@ class LeagueOut(Schema):
 
 class TeamOut(Schema):
     name: str
+    logo: Optional[str] = None
     elo_rating: float
     pts_last_5: int
     form_string: str = ""  
@@ -106,7 +107,9 @@ class FixtureOut(Schema):
     date: str
     time: str
     home_team: str
+    home_logo: Optional[str] = None
     away_team: str
+    away_logo: Optional[str] = None
     odds_h: float
     odds_d: float
     odds_a: float
@@ -150,7 +153,9 @@ class BetOut(Schema):
     league: str
     match_date: str
     home_team: str
+    home_logo: Optional[str] = None
     away_team: str
+    away_logo: Optional[str] = None
     bet_category: str
     bet_choice: str
     odds: float
@@ -159,9 +164,27 @@ class BetOut(Schema):
     created_at: str
 
     @staticmethod
+    def resolve_match_date(obj):
+        return obj.match_date.strftime("%d %b %Y")
+
+    @staticmethod
     def resolve_created_at(obj):
         return obj.created_at.strftime("%d %b %Y, %H:%M")
 
 class LeaderboardOut(Schema):
     username: str
     points: int
+
+class StandingOut(Schema):
+    rank: int
+    team_name: str
+    team_logo: Optional[str] = None
+    points: int
+    played: int
+    win: int
+    draw: int
+    lose: int
+    goals_for: int
+    goals_against: int
+    goal_diff: int
+    form: Optional[str] = None

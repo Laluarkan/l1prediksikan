@@ -3,10 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate,
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-// Halaman Beranda tetap di-import normal agar langsung tampil
 import HomePage from './pages/HomePage';
 
-// Halaman lainnya di-import menggunakan lazy loading untuk menghemat bandwidth
 const PredictPage = lazy(() => import('./pages/PredictPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const PerformancePage = lazy(() => import('./pages/PerformancePage'));
@@ -44,7 +42,6 @@ function Navigation({ user, handleLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
@@ -176,6 +173,7 @@ function Navigation({ user, handleLogout }) {
                       <Link 
                         key={link.name}
                         to={link.path} 
+                        onClick={() => setMobileMenuOpen(false)}
                         className={`block rounded-lg px-3 py-2 text-base/7 font-semibold uppercase tracking-wide transition-colors ${isActive ? 'text-indigo-400 bg-indigo-500/10' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
                       >
                         {link.name}
@@ -218,6 +216,7 @@ function Navigation({ user, handleLogout }) {
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -227,6 +226,7 @@ function App() {
       
       if (token && username) {
         setUser({ username, is_admin }); 
+        setIsInitializing(false);
         
         try {
           const res = await fetch(`${API_BASE_URL}/user/balance`, {
@@ -234,13 +234,15 @@ function App() {
           });
           if (res.ok) {
             const data = await res.json();
-            setUser(prev => ({ ...prev, balance: data.points }));
+            setUser(prev => prev ? { ...prev, balance: data.points } : prev);
           } else {
              handleLogout();
           }
         } catch (e) {
           console.error("Gagal sinkronisasi koin");
         }
+      } else {
+        setIsInitializing(false);
       }
     };
     
@@ -268,36 +270,40 @@ function App() {
           <div className="min-h-screen bg-gray-900 font-sans text-gray-200 selection:bg-indigo-500/30">
             <Navigation user={user} handleLogout={handleLogout} />
             
-            {/* Suspense digunakan sebagai penampung sementara saat komponen lazy sedang diunduh */}
-            <Suspense fallback={
+            {isInitializing ? (
               <div className="flex items-center justify-center h-[80vh]">
-                <div className="text-indigo-400 text-lg font-semibold animate-pulse">Memuat halaman...</div>
+                <div className="text-indigo-400 text-lg font-semibold animate-pulse">Memeriksa sesi...</div>
               </div>
-            }>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/predict" element={<PredictPage />} />
-                <Route path="/fixtures" element={<FixturePage user={user} />} />
-                <Route path="/blog" element={<BlogPage user={user} />} />
-                <Route path="/performance" element={<PerformancePage />} />
-                <Route path="/blog/:id" element={<ArticleDetailPage />} />
-                <Route path="/leaderboard" element={<LeaderboardPage />} />
-                
-                <Route 
-                  path="/tracker" 
-                  element={user ? <TrackerPage user={user} updateUserBalance={updateUserBalance} /> : <Navigate to="/login" replace />} 
-                />
-                
-                <Route 
-                  path="/admin" 
-                  element={user?.is_admin ? <AdminPage /> : <Navigate to="/" replace />} 
-                />
-                
-                <Route path="/login" element={<LoginPage setUser={setUser} />} />
-                <Route path="/register" element={<RegisterPage setUser={setUser} />} />
-              </Routes>
-            </Suspense>
-
+            ) : (
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-[80vh]">
+                  <div className="text-indigo-400 text-lg font-semibold animate-pulse">Memuat halaman...</div>
+                </div>
+              }>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/predict" element={<PredictPage />} />
+                  <Route path="/fixtures" element={<FixturePage user={user} />} />
+                  <Route path="/blog" element={<BlogPage user={user} />} />
+                  <Route path="/performance" element={<PerformancePage />} />
+                  <Route path="/blog/:id" element={<ArticleDetailPage />} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  
+                  <Route 
+                    path="/tracker" 
+                    element={user ? <TrackerPage user={user} updateUserBalance={updateUserBalance} /> : <Navigate to="/login" replace />} 
+                  />
+                  
+                  <Route 
+                    path="/admin" 
+                    element={user?.is_admin ? <AdminPage /> : <Navigate to="/" replace />} 
+                  />
+                  
+                  <Route path="/login" element={<LoginPage setUser={setUser} />} />
+                  <Route path="/register" element={<RegisterPage setUser={setUser} />} />
+                </Routes>
+              </Suspense>
+            )}
           </div>
         </Router>
       </HelmetProvider>

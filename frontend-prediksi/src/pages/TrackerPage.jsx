@@ -27,9 +27,8 @@ export default function TrackerPage({ user }) {
             const betData = await betRes.json()
             setBets(betData)
         }
-      // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        console.error("Gagal memuat portofolio")
+        console.error("Gagal memuat portofolio", err)
       } finally {
         setLoading(false)
       }

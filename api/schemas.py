@@ -188,3 +188,25 @@ class StandingOut(Schema):
     goals_against: int
     goal_diff: int
     form: Optional[str] = None
+
+class KnockoutMatchOut(Schema):
+    id: int
+    league_name: str
+    season: int
+    stage: str
+    match_date: str
+    home_team: str
+    away_team: str
+    home_logo: Optional[str] = None
+    away_logo: Optional[str] = None
+    home_score: Optional[int] = None
+    away_score: Optional[int] = None
+    status: str
+
+    @staticmethod
+    def resolve_league_name(obj):
+        return obj.league.name
+
+    @staticmethod
+    def resolve_match_date(obj):
+        return obj.match_date.strftime("%Y-%m-%d %H:%M")

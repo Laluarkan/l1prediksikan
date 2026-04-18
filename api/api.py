@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import jwt
+import difflib
 from datetime import datetime
 from pandas.errors import PerformanceWarning
 from django.conf import settings
@@ -17,8 +18,9 @@ from ninja.files import UploadedFile
 from dotenv import load_dotenv
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from typing import List
 
-from .models import League, Team, MatchRecord, Fixture, Article, UserProfile, UserBet, LeaguePerformance, Standing
+from .models import League, Team, MatchRecord, Fixture, Article, UserProfile, UserBet, LeaguePerformance, Standing, KnockoutMatch
 from .schemas import *
 from .services import update_league_performance, process_bet_settlements
 
@@ -204,7 +206,75 @@ def get_standings(request, league_name: str):
         return []
     
     latest_season = latest_standing.season
-    return Standing.objects.filter(league__name=league_name, season=latest_season).order_by('rank')
+    standings = list(Standing.objects.filter(league__name=league_name, season=latest_season).order_by('rank'))
+    
+    # Kalkulasi Otomatis (Fallback) jika Form dari API kosong
+    if any(not s.form for s in standings):
+        matches = list(MatchRecord.objects.filter(league__name=league_name).order_by('-date', '-time'))
+        db_teams = list(Team.objects.filter(league__name=league_name))
+        
+        db_team_forms = {}
+        for t in db_teams:
+            t_matches = [m for m in matches if m.home_team_id == t.id or m.away_team_id == t.id][:5]
+            f_list = []
+            for m in t_matches:
+                if m.home_team_id == t.id:
+                    f_list.append('W' if m.ftr == 'H' else 'L' if m.ftr == 'A' else 'D')
+                else:
+                    f_list.append('W' if m.ftr == 'A' else 'L' if m.ftr == 'H' else 'D')
+            db_team_forms[t.name] = "".join(reversed(f_list))
+        
+        db_names = list(db_team_forms.keys())
+        
+        # Kamus Pemetaan agar nama tim klasemen cocok dengan database MatchRecord
+        custom_mapping = {
+            "Wolverhampton Wanderers FC": "Wolves", "Leeds United FC": "Leeds",
+            "Manchester City FC": "Man City", "Newcastle United FC": "Newcastle",
+            "Tottenham Hotspur FC": "Tottenham", "Brighton & Hove Albion FC": "Brighton",
+            "West Ham United FC": "West Ham", "Athletic Club": "Ath Bilbao",
+            "Club Atlético de Madrid": "Ath Madrid", "RCD Espanyol de Barcelona": "Espanyol",
+            "Rayo Vallecano de Madrid": "Rayo Vallecano", "Real Betis Balompié": "Real Betis",
+            "Real Sociedad de Fútbol": "Sociedad", "Deportivo Alavés": "Alaves",
+            "RC Celta de Vigo": "Celta", "FC Internazionale Milano": "Inter",
+            "Bologna FC 1909": "Bologna", "Parma Calcio 1913": "Parma",
+            "Hellas Verona FC": "Verona", "US Sassuolo Calcio": "Sassuolo",
+            "AC Pisa 1909": "Pisa", "Como 1907": "Como", "Borussia Dortmund": "Dortmund",
+            "1. FSV Mainz 05": "Mainz", "Borussia Mönchengladbach": "M'gladbach",
+            "FC St. Pauli 1910": "St Pauli", "1. FC Heidenheim 1846": "Heidenheim",
+            "Olympique Lyonnais": "Lyon", "Stade Rennais FC 1901": "Rennes",
+            "Racing Club de Lens": "Lens", "Stade Brestois 29": "Brest",
+            "Olympique de Marseille": "Marseille", "Paris Saint-Germain FC": "Paris SG",
+            "FC Twente '65": "Twente", "Feyenoord Rotterdam": "Feyenoord",
+            "Sporting Clube de Portugal": "Sp Lisbon", "Sport Lisboa e Benfica": "Benfica",
+            "Vitória SC": "Vitoria", "GD Estoril Praia": "Estoril",
+            "Sporting Clube de Braga": "Sp Braga", "CF Estrela da Amadora": "Estrela",
+            "Heart Of Midlothian": "Hearts", "Ayr Utd": "Ayr", "Partick": "Partick Thistle",
+            "Aris Thessalonikis": "Aris", "AEK Athens FC": "AEK", "Patro Eisden": "Patro Eisden",
+            "OH Leuven": "Oud-Heverlee Leuven", "Başakşehir": "Buyuksehyr",
+            "Bodrum FK": "Bodrumspor", "OFI": "OFI Crete", "PSV": "PSV Eindhoven",
+            "AZ": "AZ Alkmaar", "NEC": "N.E.C."
+        }
+
+        for s in standings:
+            if not s.form:
+                mapped_name = custom_mapping.get(s.team_name, s.team_name)
+                if mapped_name in db_team_forms:
+                    s.form = db_team_forms[mapped_name]
+                else:
+                    close_matches = difflib.get_close_matches(mapped_name, db_names, n=1, cutoff=0.5)
+                    if close_matches:
+                        s.form = db_team_forms[close_matches[0]]
+                        
+    return standings
+
+@api.get("/knockout/{league_name}", response=List[KnockoutMatchOut])
+def get_knockout_matches(request, league_name: str):
+    latest_match = KnockoutMatch.objects.filter(league__name=league_name).order_by('-season').first()
+    if not latest_match:
+        return []
+    
+    latest_season = latest_match.season
+    return list(KnockoutMatch.objects.filter(league__name=league_name, season=latest_season).order_by('match_date'))
 
 @api.post("/predict", response=PredictionOut)
 def predict_match(request, payload: PredictIn):

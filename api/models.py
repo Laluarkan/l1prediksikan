@@ -149,3 +149,33 @@ class Standing(models.Model):
 
     def __str__(self):
         return f"{self.rank}. {self.team_name} - {self.league.name} ({self.season})"
+
+class KnockoutMatch(models.Model):
+    league = models.ForeignKey(League, on_delete=models.CASCADE, related_name='knockout_matches')
+    season = models.IntegerField()
+    stage = models.CharField(max_length=50)
+    group = models.CharField(max_length=50, blank=True, null=True)
+    match_date = models.DateTimeField()
+    home_team = models.CharField(max_length=100)
+    away_team = models.CharField(max_length=100)
+    home_logo = models.URLField(max_length=500, blank=True, null=True)
+    away_logo = models.URLField(max_length=500, blank=True, null=True)
+    
+    # Dataset Ekstensif
+    home_score = models.IntegerField(null=True, blank=True) # Full Time
+    away_score = models.IntegerField(null=True, blank=True)
+    home_score_half = models.IntegerField(null=True, blank=True)
+    away_score_half = models.IntegerField(null=True, blank=True)
+    home_score_regular = models.IntegerField(null=True, blank=True)
+    away_score_regular = models.IntegerField(null=True, blank=True)
+    home_score_extra = models.IntegerField(null=True, blank=True)
+    away_score_extra = models.IntegerField(null=True, blank=True)
+    home_score_penalties = models.IntegerField(null=True, blank=True)
+    away_score_penalties = models.IntegerField(null=True, blank=True)
+    
+    winner = models.CharField(max_length=50, blank=True, null=True)
+    duration = models.CharField(max_length=50, blank=True, null=True)
+    status = models.CharField(max_length=50, default='SCHEDULED')
+
+    def __str__(self):
+        return f"[{self.league.name}] {self.stage} - {self.home_team} vs {self.away_team}"
